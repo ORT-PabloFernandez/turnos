@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/layouts/NavBar";
 import Footer from "./components/layouts/Footer";
+import { TurnosProvider } from "./context/TurnosContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,14 +28,16 @@ export default function RootLayout({ children }) {
         minHeight: '100vh',
         margin: 0
       }}>
-        <Navbar />
-        <div className="content-wrapper" style={{ 
-          paddingTop: '4rem', 
-          flex: '1 0 auto' // Hace que este div crezca para ocupar espacio disponible
-        }}>
-          {children}
-        </div>
-        <Footer />
+        <TurnosProvider>
+          <Navbar />
+          <div className="content-wrapper" style={{ 
+            paddingTop: '4rem', 
+            flex: '1 0 auto' // Hace que este div crezca para ocupar espacio disponible
+          }}>
+            {children}
+          </div>
+          <Footer />
+        </TurnosProvider>
       </body>
     </html>
   );

@@ -2,15 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FaTasks, FaUserPlus, FaClipboardList, FaBeer } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserMd, FaClock, FaCalendarCheck } from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
 
 const Menu = () => {
   const navLinks = [
-    { name: 'Usuarios', path: '/users', icon: <FaUserPlus className="navIcon" /> },
-    { name: 'Beers', path: '/beers', icon: <FaBeer className="navIcon" /> },
-    { name: 'Administración', path: '/admin', icon: <FaClipboardList className="navIcon" /> },
-    { name: 'Tareas', path: '/tasks', icon: <FaTasks className="navIcon" /> },
+    { name: 'Profesionales', path: '/profesionales', icon: <FaUserMd className="navIcon" /> },
+    { name: 'Reservar Turno', path: '/turnos', icon: <FaCalendarAlt className="navIcon" /> },
+    { name: 'Mis Turnos', path: '/mis-turnos', icon: <FaCalendarCheck className="navIcon" /> },
+    { name: 'Horarios', path: '/horarios', icon: <FaClock className="navIcon" /> },
   ];
 
   const pathname = usePathname();

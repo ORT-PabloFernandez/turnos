@@ -7,7 +7,7 @@ const Logo = () => {
   return (
     <div className="logoContainer">
       <Link href="/">
-        <span className="logo">Gestor de Películas</span>
+        <span className="logo">Gestor de Turnos</span>
       </Link>
     </div>
   );
