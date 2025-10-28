@@ -1,40 +1,161 @@
-# PROGRAMACION DE NUEVAS TECNOLOGIAS 2
+# Sistema de Gestión de Turnos Médicos
 
-## Instrucciones de resolución de examen
+## Descripción del Proyecto
 
-Es tu primer día en [tecnoshare.com](http://tecnoshare.com) luego de un intenso entrenamiento de 10 semanas por fin tenes la oportunidad de mostrar lo que aprendiste, y tu potencial como desarrollador react.
+Este es un sistema completo de gestión de turnos médicos desarrollado con **Next.js 15** y **React 19**. La aplicación permite a los pacientes reservar turnos con profesionales de la salud, gestionar sus citas y a los administradores supervisar la disponibilidad de horarios.
 
-Luego de abrir el correo encuentras un mail de tu Líder Técnico con tu primera asignación!! 💪
+## Arquitectura y Tecnologías
 
-> Bienvenid@! estuvimos esperando por horas que llegares, tenemos varias tareas criticas y prioritarias en nuestro backlog. Por favor presta mucha atención a las instrucciones. No dudes en preguntarme cualquier cosa, aunque generalmente estoy muy ocupado resolviendo problemas heredados de las rotaciones de los desarrolladores.
+### Stack Tecnológico
+- **Frontend**: Next.js 15.3.2 con React 19
+- **Estilos**: TailwindCSS 4 + CSS personalizado
+- **Iconos**: FontAwesome + React Icons
+- **Estado Global**: React Context API
+- **Routing**: Next.js App Router
 
-> En el presente repositorío encontrarás un proyecto de nodejs que ya tiene codigo base del frontend con el que vamos a trabajar. Te aconsejo que sigas los siguientes pasos para armar tu entorno de trabajo.
+### Estructura del Proyecto
+```
+src/app/
+├── components/
+│   └── layouts/          # Componentes de layout (NavBar, Footer, Logo)
+├── context/
+│   └── TurnosContext.js  # Estado global de la aplicación
+├── horarios/             # Página de gestión de horarios
+├── mis-turnos/           # Página de turnos del usuario
+├── profesionales/        # Página de profesionales
+├── turnos/               # Página de reserva de turnos
+├── layout.js             # Layout principal
+└── page.js               # Página de inicio
+```
 
-> 1. Realizar un Fork del presente repositorio
-> 2. Realizar un clone de repositorio en tu cuenta de github
-> 3. Instalar las dependencias
-> 4. La url del backend es: https://mflixbackend.azurewebsites.net/api/movies ya se encuentra desplegado en un app services en Azure. Por ahora solo existe este endpoint.
->    El backend se conecta con una base de datos Mongodb en la cual se encuentra la base de datos **sample_mflix** con una collection llamada **movies**, ahí se encuentran aprox. 23.000 películas.
-> 5. Proba el endpoint que ya se encuentra desarrollado: /api/movies debería retornar un json con 23.000 películas. Sin embargo te aconsejo que uses el paginado que tiene para probar (mira la definición del end-point a continuación). Sí por algun motivo no llegase a funcionar, solicita asistencia.
->    -GET /api/movies?pageSize=[pageSize]&page=[page]
+## Lógica de Negocio
 
-> ### TUS TAREAS SON LAS SIGUIENTES POR ORDEN DE PRIORIDAD
->
-> 1. Agregar en la cabecera un link a la pagina de peliculas con un icono de película, ademas en el pie de la pagina agregar un icono de github con el link del repositorio
-> 2. Necesitamos hacer cambios menores al listado de películas:
->    - Agregar el **fullplot**, debajo del titulo
->    - Si no hay **poster** mostrar un icono de película
->    - Que se pagine de a 30 películas
-> 3. Crear el componente de detalle de la película con su respectivo **poster**, con el **title** debajo y la descripción **fullplot**
-> 4. Agregar funcionalidad de favoritos en listado de películas (aunque no se persista)
-> 5. Implementar un listado de las 10 mejores peliculas segun el criterio de imdbRating. Y ponerlo en la pagina inicial. (no hay una api especifica para obtener las mejores películas, por lo que debes hacer un filtro en el frontend)
+### 1. Gestión de Profesionales
+- **Datos**: Cada profesional tiene ID, nombre, especialidad, avatar y email
+- **Funcionalidad**: Visualización de profesionales disponibles con sus especialidades
+- **Componentes**: `ProfessionalCard.jsx`, `ProfessionalSelector.jsx`
 
-> Desde ya muchas gracias por la colaboración! 😉 como te comente en la entrevista soy muy detallista en la prolijidad del codigo y la performance cada detalle cuenta, sin embargo si no estas seguro, es mejor que lo resuelvas como puedas y me dejes notas en el readme.md del repo, para que yo pueda probar.
+### 2. Sistema de Horarios
+- **Generación Automática**: Se generan horarios para los próximos 30 días laborables
+- **Horarios**: Mañana (9:00-12:00) y tarde (14:00-17:00)
+- **Estados**: Disponible/Ocupado
+- **Filtros**: Por profesional, fecha y estado de disponibilidad
 
-## Intrucciones para la entrega
+### 3. Reserva de Turnos (Flujo de 4 Pasos)
+1. **Selección de Profesional**: Lista de profesionales con especialidades
+2. **Selección de Fecha**: Calendario con días disponibles
+3. **Selección de Horario**: Slots de tiempo disponibles para la fecha elegida
+4. **Confirmación**: Resumen del turno y confirmación final
 
-Si ya terminaste o si son las 10:00 asegurate de seguir los siguientes pasos para la entrega:
+### 4. Gestión de Turnos del Usuario
+- **Visualización**: Turnos próximos y historial
+- **Estados**: Confirmado, Completado
+- **Acciones**: Cancelación de turnos futuros
+- **Validaciones**: Solo se pueden cancelar turnos futuros
 
-1. Realizar un commit a tu repo con un mensaje con tu nombre completo
-2. Realizar un push a tu repositorio
-3. Realizar un pull request a mi repositorio
+### 5. Administración de Horarios
+- **Dashboard**: Estadísticas de horarios totales, disponibles y ocupados
+- **Filtros Avanzados**: Por profesional, fecha y estado
+- **Visualización**: Agrupación por fecha con información del paciente
+
+## Context API - Estado Global
+
+### TurnosContext.js
+Maneja todo el estado de la aplicación:
+
+```javascript
+// Estados principales
+- profesionales: Array de profesionales
+- horariosDisponibles: Array de slots de tiempo
+- turnosReservados: Array de turnos confirmados
+- usuarioActual: Datos del usuario logueado
+
+// Funciones principales
+- reservarTurno(): Reserva un horario específico
+- cancelarTurno(): Cancela un turno y libera el horario
+- obtenerTurnosPorProfesional(): Filtra turnos por profesional
+- obtenerTurnosUsuario(): Obtiene turnos del usuario actual
+- obtenerHorariosDisponiblesPorProfesional(): Filtra horarios disponibles
+```
+
+## Flujos de Usuario
+
+### Flujo de Reserva
+1. Usuario accede desde página principal o profesionales
+2. Selecciona profesional (puede venir pre-seleccionado via URL)
+3. Elige fecha en calendario interactivo
+4. Selecciona horario disponible
+5. Confirma la reserva
+6. Recibe confirmación y el horario se marca como ocupado
+
+### Flujo de Cancelación
+1. Usuario accede a "Mis Turnos"
+2. Ve turnos próximos y pasados
+3. Hace clic en "Cancelar" en turno futuro
+4. Confirma cancelación en modal
+5. Turno se elimina y horario queda disponible nuevamente
+
+### Flujo Administrativo
+1. Acceso a "Horarios" para supervisión
+2. Visualización de estadísticas generales
+3. Aplicación de filtros por profesional/fecha/estado
+4. Revisión de ocupación y datos de pacientes
+
+## Características Técnicas
+
+### Responsive Design
+- Grid layouts adaptativos
+- Componentes optimizados para móvil y desktop
+- Uso de CSS Grid y Flexbox
+
+### Gestión de Estados
+- Context API para estado global
+- useState para estados locales de componentes
+- useEffect para efectos secundarios y generación de datos
+
+### Validaciones y UX
+- Validación de fechas (solo días laborables)
+- Confirmaciones para acciones destructivas
+- Mensajes de éxito/error
+- Estados de carga y feedback visual
+
+### Optimizaciones
+- Lazy loading de imágenes con fallbacks
+- Filtrado eficiente de datos
+- Memoización implícita con React 19
+- CSS modular por página
+
+## Instalación y Configuración
+
+```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar en desarrollo
+npm run dev
+
+# Construir para producción
+npm run build
+
+# Ejecutar en producción
+npm start
+```
+
+## Notas de Desarrollo
+
+### Datos de Prueba
+- 3 profesionales predefinidos con especialidades diferentes
+- Horarios generados automáticamente para 30 días
+- Usuario demo para testing
+
+### Extensibilidad
+- Estructura modular permite agregar nuevas funcionalidades
+- Context API facilita agregar nuevos estados globales
+- Componentes reutilizables para diferentes vistas
+
+### Consideraciones Futuras
+- Integración con backend real
+- Autenticación de usuarios
+- Notificaciones por email/SMS
+- Sincronización con calendarios externos
+- Sistema de recordatorios automáticos
