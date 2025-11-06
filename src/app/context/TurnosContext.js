@@ -14,29 +14,30 @@ export const useTurnos = () => {
 
 export const TurnosProvider = ({ children }) => {
   // Datos de profesionales
-  const [profesionales, setProfesionales] = useState([
-    {
-      id: 1,
-      nombre: 'Dr. Juan Pérez',
-      especialidad: 'Cardiología',
-      avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
-      email: 'juan.perez@hospital.com'
-    },
-    {
-      id: 2,
-      nombre: 'Dra. María González',
-      especialidad: 'Dermatología',
-      avatar: 'https://images.unsplash.com/photo-1594824475317-e5b8e3f5c8b5?w=150&h=150&fit=crop&crop=face',
-      email: 'maria.gonzalez@hospital.com'
-    },
-    {
-      id: 3,
-      nombre: 'Dr. Carlos Rodriguez',
-      especialidad: 'Traumatología',
-      avatar: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face',
-      email: 'carlos.rodriguez@hospital.com'
-    }
-  ]);
+  // const [profesionales, setProfesionales] = useState([
+  //   {
+  //     id: 1,
+  //     nombre: 'Dr. Juan Pérez',
+  //     especialidad: 'Cardiología',
+  //     avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
+  //     email: 'juan.perez@hospital.com'
+  //   },
+  //   {
+  //     id: 2,
+  //     nombre: 'Dra. María González',
+  //     especialidad: 'Dermatología',
+  //     avatar: 'https://images.unsplash.com/photo-1594824475317-e5b8e3f5c8b5?w=150&h=150&fit=crop&crop=face',
+  //     email: 'maria.gonzalez@hospital.com'
+  //   },
+  //   {
+  //     id: 3,
+  //     nombre: 'Dr. Carlos Rodriguez',
+  //     especialidad: 'Traumatología',
+  //     avatar: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face',
+  //     email: 'carlos.rodriguez@hospital.com'
+  //   }
+  // ]);
+  const [profesionales, setProfesionales] = useState([]);
 
   // Horarios disponibles
   const [horariosDisponibles, setHorariosDisponibles] = useState([]);
@@ -50,6 +51,21 @@ export const TurnosProvider = ({ children }) => {
     nombre: 'Usuario Demo',
     email: 'usuario@demo.com'
   });
+
+  //fetch para traer todos los profesionales
+  useEffect(() => {
+    async function fetchProfesionales(){
+    try{
+      const response = await fetch('http://localhost:3000/api/profesionales');
+      const data = await response.json();
+      console.log(data)
+      setProfesionales(data)
+    }catch (error){
+      console.log(error)
+    }
+  }
+   fetchProfesionales(); 
+  },[])
 
   // Generar horarios disponibles para los próximos 30 días
   useEffect(() => {
