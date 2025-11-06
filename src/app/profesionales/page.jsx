@@ -1,27 +1,26 @@
 'use client';
 
-// import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTurnos } from '../context/TurnosContext';
 import ProfessionalCard from './ProfessionalCard';
 import './profesionales.css';
 
 export default function ProfesionalesPage() {
-  const { profesionales } = useTurnos();
-  // const [profesionales, setProfesionales] = useState([])
+  const { profesionales, setProfesionales } = useTurnos();
 
-  // useEffect(() => {
-  //   async function fetchProfesionales(){
-  //   try{
-  //     const response = await fetch('http://localhost:3000/api/profesionales');
-  //     const data = await response.json();
-  //     console.log(data)
-  //     setProfesionales(data)
-  //   }catch (error){
-  //     console.log(error)
-  //   }
-  // }
-  //  fetchProfesionales(); 
-  // },[])
+  useEffect(() => {
+    async function fetchProfesionales(){
+    try{
+      const response = await fetch('http://localhost:3000/api/profesionales');
+      const data = await response.json();
+      console.log(data)
+      setProfesionales(data)
+    }catch (error){
+      console.log(error)
+    }
+  }
+   fetchProfesionales(); 
+  },[])
 
   return (
     <div className="profesionales-container">
