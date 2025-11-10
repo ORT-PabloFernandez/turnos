@@ -2,11 +2,12 @@
 
 import { FaUserMd, FaCalendarAlt, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
 import { useTurnos } from '../context/TurnosContext';
+import { formatDate } from '../context/Date';
 
 export default function BookingConfirmation({ profesional, date, timeSlot, onConfirm, onCancel }) {
   const { usuarioActual } = useTurnos();
 
-  const formatDate = (dateString) => {
+  /* const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       weekday: 'long',
@@ -14,7 +15,7 @@ export default function BookingConfirmation({ profesional, date, timeSlot, onCon
       month: 'long',
       day: 'numeric'
     });
-  };
+  }; */
 
   return (
     <div className="booking-confirmation">
