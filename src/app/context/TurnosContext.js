@@ -47,11 +47,35 @@ export const TurnosProvider = ({ children }) => {
   const [turnosReservados, setTurnosReservados] = useState([]);
 
   // Usuario actual (simulado)
-  const [usuarioActual] = useState({
+  /* const [usuarioActual] = useState({
     id: 1,
     nombre: 'Usuario Demo',
     email: 'usuario@demo.com'
-  });
+  }); */
+   const [usuarioActual, setUsuarioActual] = useState(null);
+
+   useEffect(() => {
+    // Intentar leer el usuario desde localStorage
+    const saved = localStorage.getItem('currentUser');
+    if (saved) {
+      const u = JSON.parse(saved);
+      // Normalizamos nombres de campos: name -> nombre
+      setUsuarioActual({
+        id: u.id ?? u._id ?? 1,
+        nombre: u.nombre ?? u.name ?? 'Usuario',
+        email: u.email ?? 'usuario@demo.com',
+        avatar: u.avatar ?? ''
+      });
+    } else {
+      // Fallback por si no hay login guardado
+      setUsuarioActual({
+        id: 1,
+        nombre: 'Usuario Demo',
+        email: 'usuario@demo.com',
+        avatar: ''
+      });
+    }
+  }, []);
 
   //fetch para traer todos los profesionales
   useEffect(() => {

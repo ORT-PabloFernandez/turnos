@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 //import { useAuth } from '../../../auth/AuthProvider';
 import styles from './navbar.css';
 
@@ -21,6 +21,12 @@ export default function Navbar() {
     email: 'Grady.Archie@ejemplo.com',
     status: 'completed'
   }, logout: () => {}};
+
+  useEffect(() => {
+    // Deja un objeto compatible con el TurnosContext en localStorage
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  }, [currentUser]);
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationIndicator, setNotificationIndicator] = useState(true);
 
