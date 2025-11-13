@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTurnos } from '../context/TurnosContext';
 import { FaCalendarCheck, FaUserMd, FaClock, FaTrash, FaCalendarAlt } from 'react-icons/fa';
 import './mis-turnos.css';
+import { formatDate, parseDateTimeLocal } from '../context/Date';
 
 export default function MisTurnosPage() {
   const { obtenerTurnosUsuario, cancelarTurno, profesionales, usuarioActual } = useTurnos();
@@ -11,7 +12,7 @@ export default function MisTurnosPage() {
   
   const misTurnos = obtenerTurnosUsuario();
   
-  const formatDate = (dateString) => {
+  /* const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       weekday: 'long',
@@ -19,7 +20,7 @@ export default function MisTurnosPage() {
       month: 'long',
       day: 'numeric'
     });
-  };
+  }; */
 
   const formatTime = (timeString) => {
     return timeString;
@@ -37,8 +38,8 @@ export default function MisTurnosPage() {
   };
 
   const isUpcoming = (fecha, hora) => {
-    const turnoDateTime = new Date(`${fecha}T${hora}`);
-    return turnoDateTime > new Date();
+    //const turnoDateTime = new Date(`${fecha}T${hora}`);
+    return parseDateTimeLocal(fecha, hora) > new Date();
   };
 
   const upcomingTurnos = misTurnos.filter(turno => isUpcoming(turno.fecha, turno.hora));
