@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toAMD } from './Date';
 
 const TurnosContext = createContext();
 
@@ -79,13 +80,14 @@ export const TurnosProvider = ({ children }) => {
         
         // Solo días laborables (lunes a viernes)
         if (fecha.getDay() >= 1 && fecha.getDay() <= 5) {
+          const fechaAMD = toAMD(fecha);
           profesionales.forEach(profesional => {
             // Horarios de mañana: 9:00 - 12:00
             for (let hora = 9; hora < 12; hora++) {
               horarios.push({
-                id: `${profesional.id}-${fecha.toISOString().split('T')[0]}-${hora}:00`,
+                id: `${profesional.id}-${fechaAMD}-${hora}:00`,
                 profesionalId: profesional.id,
-                fecha: fecha.toISOString().split('T')[0],
+                fecha: fechaAMD,
                 hora: `${hora}:00`,
                 disponible: true
               });
@@ -94,9 +96,9 @@ export const TurnosProvider = ({ children }) => {
             // Horarios de tarde: 14:00 - 17:00
             for (let hora = 14; hora < 17; hora++) {
               horarios.push({
-                id: `${profesional.id}-${fecha.toISOString().split('T')[0]}-${hora}:00`,
+                id: `${profesional.id}-${fechaAMD}-${hora}:00`,
                 profesionalId: profesional.id,
-                fecha: fecha.toISOString().split('T')[0],
+                fecha: fechaAMD,
                 hora: `${hora}:00`,
                 disponible: true
               });
@@ -126,7 +128,7 @@ export const TurnosProvider = ({ children }) => {
       hora: horario.hora,
       usuario: datosUsuario || usuarioActual,
       estado: 'confirmado',
-      fechaReserva: new Date().toISOString()
+      fechaReserva: toAMD(new Date())
     };
 
     setTurnosReservados(prev => [...prev, nuevoTurno]);

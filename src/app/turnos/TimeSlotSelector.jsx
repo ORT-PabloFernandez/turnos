@@ -1,9 +1,10 @@
 'use client';
 
 import { FaArrowLeft, FaClock } from 'react-icons/fa';
+import { formatDate } from '../context/Date';
 
 export default function TimeSlotSelector({ profesional, date, timeSlots, onTimeSlotSelect, onBack }) {
-  const formatDate = (dateString) => {
+  /* const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       weekday: 'long',
@@ -11,7 +12,7 @@ export default function TimeSlotSelector({ profesional, date, timeSlots, onTimeS
       month: 'long',
       day: 'numeric'
     });
-  };
+  }; */
 
   const groupTimeSlotsByPeriod = (slots) => {
     const morning = slots.filter(slot => {
