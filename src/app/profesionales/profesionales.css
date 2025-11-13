@@ -88,6 +88,35 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+/* Email en una sola línea */
+.professional-email .email-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  cursor: help;
+  position: relative;
+}
+
+/* Mostrar email completo al pasar el mouse */
+.professional-email .email-text:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  z-index: 10;
+}
+
 .stat {
   text-align: center;
 }
@@ -130,15 +159,15 @@
   .profesionales-container {
     padding: 1rem;
   }
-  
+
   .profesionales-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .professional-card {
     padding: 1.5rem;
   }
-  
+
   .professional-avatar img {
     width: 100px;
     height: 100px;
