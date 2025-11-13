@@ -1,46 +1,54 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTurnos } from '../context/TurnosContext';
-import { FaClock, FaUserMd, FaCalendarAlt, FaEye, FaFilter } from 'react-icons/fa';
-import './horarios.css';
+import { useState } from "react";
+import { useTurnos } from "../context/TurnosContext";
+import {
+  FaClock,
+  FaUserMd,
+  FaCalendarAlt,
+  FaEye,
+  FaFilter,
+} from "react-icons/fa";
+import "./horarios.css";
 import { toAMD, formatDate } from '../context/Date';
 
 export default function HorariosPage() {
   const { profesionales, horariosDisponibles, turnosReservados } = useTurnos();
-  const [selectedProfessional, setSelectedProfessional] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [viewMode, setViewMode] = useState('available'); // 'available', 'occupied', 'all'
+  const [selectedProfessional, setSelectedProfessional] = useState("all");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [viewMode, setViewMode] = useState("available"); // 'available', 'occupied', 'all'
 
   /* const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("es-ES", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     });
   }; */
 
 
   const getProfessionalById = (id) => {
-    return profesionales.find(p => p.id === id);
+    return profesionales.find((p) => p.id === id);
   };
 
   const getTurnoByHorarioId = (horarioId) => {
-    return turnosReservados.find(t => t.horarioId === horarioId);
+    return turnosReservados.find((t) => t.horarioId === horarioId);
   };
 
-  const filteredHorarios = horariosDisponibles.filter(horario => {
-    const matchesProfessional = selectedProfessional === 'all' || horario.profesionalId === parseInt(selectedProfessional);
+  const filteredHorarios = horariosDisponibles.filter((horario) => {
+    const matchesProfessional =
+      selectedProfessional === "all" ||
+      horario.profesionalId === parseInt(selectedProfessional);
     const matchesDate = !selectedDate || horario.fecha === selectedDate;
-    
+
     let matchesViewMode = true;
-    if (viewMode === 'available') {
+    if (viewMode === "available") {
       matchesViewMode = horario.disponible;
-    } else if (viewMode === 'occupied') {
+    } else if (viewMode === "occupied") {
       matchesViewMode = !horario.disponible;
     }
-    
+
     return matchesProfessional && matchesDate && matchesViewMode;
   });
 
@@ -56,22 +64,23 @@ export default function HorariosPage() {
   // Ordenar fechas
   const fechasOrdenadas = Object.keys(horariosPorFecha).sort();
 
-  const getNextWeekDates = () => {
+    const getNextMonthDates = (base = new Date()) => {
+    const year = base.getFullYear();
+    const month = base.getMonth() + 1;
+    const start = new Date(year, month, 1);
+    const end = new Date(year, month + 1, 0);
     const dates = [];
-    const today = new Date();
-    for (let i = 1; i <= 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      dates.push(toAMD(date));
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split("T")[0]);
     }
     return dates;
   };
 
   const getStats = () => {
     const total = horariosDisponibles.length;
-    const disponibles = horariosDisponibles.filter(h => h.disponible).length;
+    const disponibles = horariosDisponibles.filter((h) => h.disponible).length;
     const ocupados = total - disponibles;
-    
+
     return { total, disponibles, ocupados };
   };
 
@@ -118,43 +127,45 @@ export default function HorariosPage() {
       {/* Filtros */}
       <div className="filters-section">
         <div className="filters-header">
-          <h3><FaFilter /> Filtros</h3>
+          <h3>
+            <FaFilter /> Filtros
+          </h3>
         </div>
         <div className="filters-grid">
           <div className="filter-group">
             <label>Profesional</label>
-            <select 
-              value={selectedProfessional} 
+            <select
+              value={selectedProfessional}
               onChange={(e) => setSelectedProfessional(e.target.value)}
             >
               <option value="all">Todos los profesionales</option>
-              {profesionales.map(prof => (
+              {profesionales.map((prof) => (
                 <option key={prof.id} value={prof.id}>
                   {prof.nombre} - {prof.especialidad}
                 </option>
               ))}
             </select>
           </div>
-          
+
           <div className="filter-group">
             <label>Fecha</label>
-            <select 
-              value={selectedDate} 
+            <select
+              value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             >
               <option value="">Todas las fechas</option>
-              {getNextWeekDates().map(date => (
+              {getNextMonthDates().map((date) => (
                 <option key={date} value={date}>
                   {formatDate(date)}
                 </option>
               ))}
             </select>
           </div>
-          
+
           <div className="filter-group">
             <label>Estado</label>
-            <select 
-              value={viewMode} 
+            <select
+              value={viewMode}
               onChange={(e) => setViewMode(e.target.value)}
             >
               <option value="all">Todos</option>
@@ -174,31 +185,37 @@ export default function HorariosPage() {
             <p>Ajusta los filtros para ver más resultados</p>
           </div>
         ) : (
-          fechasOrdenadas.map(fecha => (
+          fechasOrdenadas.map((fecha) => (
             <div key={fecha} className="fecha-section">
               <h3 className="fecha-title">
                 {formatDate(fecha)}
               </h3>
-              
+
               <div className="horarios-grid">
                 {horariosPorFecha[fecha]
                   .sort((a, b) => a.hora.localeCompare(b.hora))
-                  .map(horario => {
-                    const profesional = getProfessionalById(horario.profesionalId);
+                  .map((horario) => {
+                    const profesional = getProfessionalById(
+                      horario.profesionalId
+                    );
                     const turno = getTurnoByHorarioId(horario.id);
-                    
+
                     return (
-                      <div 
-                        key={horario.id} 
-                        className={`horario-card ${horario.disponible ? 'available' : 'occupied'}`}
+                      <div
+                        key={horario.id}
+                        className={`horario-card ${
+                          horario.disponible ? "available" : "occupied"
+                        }`}
                       >
                         <div className="horario-header">
                           <div className="profesional-info">
-                            <img 
-                              src={profesional?.avatar} 
+                            <img
+                              src={profesional?.avatar}
                               alt={profesional?.nombre}
                               onError={(e) => {
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional?.nombre || 'Doctor')}&background=3b82f6&color=fff&size=40`;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  profesional?.nombre || "Doctor"
+                                )}&background=3b82f6&color=fff&size=40`;
                               }}
                             />
                             <div>
@@ -206,16 +223,20 @@ export default function HorariosPage() {
                               <p>{profesional?.especialidad}</p>
                             </div>
                           </div>
-                          <div className={`status-badge ${horario.disponible ? 'available' : 'occupied'}`}>
-                            {horario.disponible ? 'Disponible' : 'Ocupado'}
+                          <div
+                            className={`status-badge ${
+                              horario.disponible ? "available" : "occupied"
+                            }`}
+                          >
+                            {horario.disponible ? "Disponible" : "Ocupado"}
                           </div>
                         </div>
-                        
+
                         <div className="horario-time">
                           <FaClock />
                           <span>{horario.hora}</span>
                         </div>
-                        
+
                         {!horario.disponible && turno && (
                           <div className="paciente-info">
                             <h5>Paciente:</h5>
