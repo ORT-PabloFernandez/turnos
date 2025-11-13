@@ -64,13 +64,14 @@ export default function HorariosPage() {
   // Ordenar fechas
   const fechasOrdenadas = Object.keys(horariosPorFecha).sort();
 
-  const getNextWeekDates = () => {
+    const getNextMonthDates = (base = new Date()) => {
+    const year = base.getFullYear();
+    const month = base.getMonth() + 1;
+    const start = new Date(year, month, 1);
+    const end = new Date(year, month + 1, 0);
     const dates = [];
-    const today = new Date();
-    for (let i = 1; i <= 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      dates.push(toAMD(date));
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split("T")[0]);
     }
     return dates;
   };
