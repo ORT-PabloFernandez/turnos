@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FaChevronLeft, FaChevronRight, FaArrowLeft } from 'react-icons/fa';
 import { useTurnos } from '../context/TurnosContext';
+import { toAMD } from '../context/Date';
 
 export default function CalendarView({ profesional, onDateSelect, onBack }) {
   const { obtenerHorariosDisponiblesPorProfesional } = useTurnos();
@@ -29,7 +30,7 @@ export default function CalendarView({ profesional, onDateSelect, onBack }) {
   // Días del mes
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = toAMD(date);
     const availableSlots = obtenerHorariosDisponiblesPorProfesional(profesional.id, dateString);
     const isPast = date < today;
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;

@@ -10,6 +10,7 @@ import {
   FaFilter,
 } from "react-icons/fa";
 import "./horarios.css";
+import { toAMD, formatDate } from '../context/Date';
 
 export default function HorariosPage() {
   const { profesionales, horariosDisponibles, turnosReservados } = useTurnos();
@@ -17,14 +18,15 @@ export default function HorariosPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [viewMode, setViewMode] = useState("available"); // 'available', 'occupied', 'all'
 
-  const formatDate = (dateString) => {
+  /* const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES", {
       weekday: "short",
       month: "short",
       day: "numeric",
     });
-  };
+  }; */
+
 
   const getProfessionalById = (id) => {
     return profesionales.find((p) => p.id === id);
@@ -68,19 +70,7 @@ export default function HorariosPage() {
     for (let i = 1; i <= 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      dates.push(date.toISOString().split("T")[0]);
-    }
-    return dates;
-  };
-
-  const getNextMonthDates = (base = new Date()) => {
-    const year = base.getFullYear();
-    const month = base.getMonth() + 1;
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0);
-    const dates = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(d.toISOString().split("T")[0]);
+      dates.push(toAMD(date));
     }
     return dates;
   };
@@ -197,12 +187,7 @@ export default function HorariosPage() {
           fechasOrdenadas.map((fecha) => (
             <div key={fecha} className="fecha-section">
               <h3 className="fecha-title">
-                {new Date(fecha).toLocaleDateString("es-ES", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {formatDate(fecha)}
               </h3>
 
               <div className="horarios-grid">
