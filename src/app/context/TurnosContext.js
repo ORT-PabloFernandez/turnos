@@ -53,6 +53,23 @@ export const TurnosProvider = ({ children }) => {
     email: 'usuario@demo.com'
   });
 
+  /*
+  // TODO: Descomentar cuando tengamos el user de la sesion
+  const obtenerTurnosUsuario = async function fetchTurnos(){
+    try {
+      const response = await fetch('http://localhost:3000/api/turnos/usuario/1');
+      const data = await response.json();
+      console.log(data)
+      setTurnosReservados(data)
+    } catch (error){
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    obtenerTurnosUsuario(); 
+  }, [])*/
+
   //fetch para traer todos los profesionales
   useEffect(() => {
     async function fetchProfesionales(){
