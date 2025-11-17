@@ -19,7 +19,7 @@ export default function TurnosPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const router = useRouter();
-  // Si viene un profesional en la URL, seleccionarlo automáticamente
+
   useEffect(() => {
     const profesionalId = searchParams.get('profesional');
     if (profesionalId) {
@@ -51,10 +51,8 @@ export default function TurnosPage() {
       const success = reservarTurno(selectedTimeSlot.id);
       if (success) {
         setBookingSuccess(true);
-        // Ocultar mensaje de éxito después de 3 segundos
         setTimeout(() => {
           setBookingSuccess(false);
-          // TODO: agregar pantalla de loading
           router.push('/mis-turnos');
         }, 3000);
       }
@@ -78,9 +76,12 @@ export default function TurnosPage() {
       </div>
 
       {bookingSuccess && (
-        <div className="success-message">
-          <h3>¡Turno reservado exitosamente!</h3>
-          <p>Recibirás una confirmación por email.</p>
+        <div className="success-loading" aria-live="polite">
+          <div className="success-card">
+            <div className="spinner" />
+            <h3>¡Turno reservado exitosamente!</h3>
+            <p className="subtext">Serás redirigido a Mis Turnos...</p>
+          </div>
         </div>
       )}
 

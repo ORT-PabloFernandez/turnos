@@ -658,3 +658,101 @@
     flex-direction: column;
   }
 }
+
+/* Pantalla de Carga cuando se genera nuevo Turno */
+.success-loading {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.98);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.success-card {
+  text-align: center;
+  max-width: 520px;
+  width: 100%;
+}
+
+.spinner {
+  margin: 0 auto 1rem;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 6px solid rgba(0, 0, 0, 0.08);
+  border-top-color: #4caf50;
+  animation: spin 1s linear infinite;
+}
+
+.success-card h3 {
+  margin: 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.success-card .subtext {
+  margin: 0;
+  color: #555;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .turnos-container {
+    padding: 1rem;
+  }
+  
+  .booking-steps {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .professionals-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .professional-option {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .selected-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .selected-date h4 {
+    text-align: left;
+  }
+  
+  .calendar-grid {
+    font-size: 0.875rem;
+  }
+  
+  .calendar-day {
+    min-height: 60px;
+  }
+  
+  .time-slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  
+  .confirmation-actions {
+    flex-direction: column;
+  }
+}
