@@ -1,17 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTurnos } from '../context/TurnosContext';
-import { FaCalendarCheck, FaUserMd, FaClock, FaTrash, FaCalendarAlt } from 'react-icons/fa';
-import './mis-turnos.css';
+import { useState } from "react";
+import { useTurnos } from "../context/TurnosContext";
+import {
+  FaCalendarCheck,
+  FaUserMd,
+  FaClock,
+  FaTrash,
+  FaCalendarAlt,
+} from "react-icons/fa";
+import "./mis-turnos.css";
+import { formatDate, parseDateTimeLocal } from "../context/Date";
 
 export default function MisTurnosPage() {
-  const { obtenerTurnosUsuario, cancelarTurno, profesionales } = useTurnos();
+  const { obtenerTurnosUsuario, cancelarTurno, profesionales, usuarioActual } =
+    useTurnos();
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
-  
+
   const misTurnos = obtenerTurnosUsuario();
-  
-  const formatDate = (dateString) => {
+
+  /* const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       weekday: 'long',
@@ -19,36 +27,58 @@ export default function MisTurnosPage() {
       month: 'long',
       day: 'numeric'
     });
-  };
+  }; */
 
   const formatTime = (timeString) => {
     return timeString;
   };
 
   const getProfessionalById = (id) => {
-    return profesionales.find(p => p.id === id);
+    return profesionales.find((p) => p.id === id);
   };
 
-  const handleCancelTurno = (turnoId) => {
-    const success = cancelarTurno(turnoId);
-    if (success) {
+  const [cancelError, setCancelError] = useState("");
+
+  const handleCancelTurno = async (turnoId) => {
+    const result = await cancelarTurno(turnoId);
+
+    if (result.ok) {
       setShowCancelConfirm(null);
+      setCancelError("");
+    } else {
+      setCancelError(result.message || "No se pudo cancelar el turno");
     }
   };
 
   const isUpcoming = (fecha, hora) => {
-    const turnoDateTime = new Date(`${fecha}T${hora}`);
-    return turnoDateTime > new Date();
+    //const turnoDateTime = new Date(`${fecha}T${hora}`);
+    return parseDateTimeLocal(fecha, hora) > new Date();
   };
 
-  const upcomingTurnos = misTurnos.filter(turno => isUpcoming(turno.fecha, turno.hora));
-  const pastTurnos = misTurnos.filter(turno => !isUpcoming(turno.fecha, turno.hora));
+  const canCancelLocal = (fecha, hora) => {
+    const turnoDateTime = parseDateTimeLocal(fecha, hora);
+    const now = new Date();
+
+    const diff = turnoDateTime.getTime() - now.getTime();
+    const MILISEGUNDOS_EN_24HS = 24 * 60 * 60 * 1000;
+
+    return diff >= MILISEGUNDOS_EN_24HS;
+  };
+
+  const upcomingTurnos = misTurnos.filter((turno) =>
+    isUpcoming(turno.fecha, turno.hora)
+  );
+  const pastTurnos = misTurnos.filter(
+    (turno) => !isUpcoming(turno.fecha, turno.hora)
+  );
 
   return (
     <div className="mis-turnos-container">
       <div className="mis-turnos-header">
         <h1>Mis Turnos</h1>
         <p>Gestiona tus citas médicas</p>
+
+        {cancelError && <p className="error-message">{cancelError}</p>}
       </div>
 
       {misTurnos.length === 0 ? (
@@ -72,11 +102,13 @@ export default function MisTurnosPage() {
                     <div key={turno.id} className="turno-card upcoming">
                       <div className="turno-header">
                         <div className="profesional-info">
-                          <img 
-                            src={profesional?.avatar} 
+                          <img
+                            src={profesional?.avatar}
                             alt={profesional?.nombre}
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional?.nombre || 'Doctor')}&background=3b82f6&color=fff&size=60`;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                profesional?.nombre || "Doctor"
+                              )}&background=3b82f6&color=fff&size=60`;
                             }}
                           />
                           <div>
@@ -86,9 +118,7 @@ export default function MisTurnosPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="turno-status confirmed">
-                          Confirmado
-                        </div>
+                        <div className="turno-status confirmed">Confirmado</div>
                       </div>
 
                       <div className="turno-details">
@@ -103,9 +133,23 @@ export default function MisTurnosPage() {
                       </div>
 
                       <div className="turno-actions">
-                        <button 
-                          className="btn-cancel"
-                          onClick={() => setShowCancelConfirm(turno.id)}
+                        <button
+                          className={`btn-cancel ${
+                            !canCancelLocal(turno.fecha, turno.hora)
+                              ? "disabled"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            if (canCancelLocal(turno.fecha, turno.hora)) {
+                              setShowCancelConfirm(turno.id);
+                            }
+                          }}
+                          disabled={!canCancelLocal(turno.fecha, turno.hora)}
+                          title={
+                            canCancelLocal(turno.fecha, turno.hora)
+                              ? "Cancelar turno"
+                              : "Este turno no se puede cancelar porque faltan menos de 24 horas"
+                          }
                         >
                           <FaTrash /> Cancelar
                         </button>
@@ -127,11 +171,13 @@ export default function MisTurnosPage() {
                     <div key={turno.id} className="turno-card past">
                       <div className="turno-header">
                         <div className="profesional-info">
-                          <img 
-                            src={profesional?.avatar} 
+                          <img
+                            src={profesional?.avatar}
                             alt={profesional?.nombre}
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional?.nombre || 'Doctor')}&background=6b7280&color=fff&size=60`;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                profesional?.nombre || "Doctor"
+                              )}&background=6b7280&color=fff&size=60`;
                             }}
                           />
                           <div>
@@ -141,9 +187,7 @@ export default function MisTurnosPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="turno-status completed">
-                          Completado
-                        </div>
+                        <div className="turno-status completed">Completado</div>
                       </div>
 
                       <div className="turno-details">
@@ -170,15 +214,18 @@ export default function MisTurnosPage() {
         <div className="modal-overlay">
           <div className="modal">
             <h3>¿Cancelar turno?</h3>
-            <p>Esta acción no se puede deshacer. El horario quedará disponible para otros pacientes.</p>
+            <p>
+              Esta acción no se puede deshacer. El horario quedará disponible
+              para otros pacientes.
+            </p>
             <div className="modal-actions">
-              <button 
+              <button
                 className="btn-secondary"
                 onClick={() => setShowCancelConfirm(null)}
               >
                 No, mantener turno
               </button>
-              <button 
+              <button
                 className="btn-danger"
                 onClick={() => handleCancelTurno(showCancelConfirm)}
               >
