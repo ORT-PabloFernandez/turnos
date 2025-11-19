@@ -6,7 +6,7 @@ import { FaCalendarCheck, FaUserMd, FaClock, FaTrash, FaCalendarAlt } from 'reac
 import './mis-turnos.css';
 
 export default function MisTurnosPage() {
-  const { obtenerTurnosUsuario, cancelarTurno, profesionales, usuarioActual } = useTurnos();
+  const { obtenerTurnosUsuario, cancelarTurno, profesionales } = useTurnos();
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
   
   const misTurnos = obtenerTurnosUsuario();

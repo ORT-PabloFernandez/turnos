@@ -74,7 +74,24 @@
   .navbar-right {
     display: flex;
     align-items: center;
+    color: black;
   }
+
+  .auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;            /* separación entre "Iniciar Sesión" y "Registrarse" */
+}
+
+.auth-nav-button {
+  text-decoration: none;
+  color: #111827;
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .auth-buttons { gap: 1.5rem; }
+}
   
   .notificationContainer {
     padding: 0.5rem;

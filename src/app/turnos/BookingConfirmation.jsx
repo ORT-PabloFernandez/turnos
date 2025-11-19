@@ -2,9 +2,10 @@
 
 import { FaUserMd, FaCalendarAlt, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
 import { useTurnos } from '../context/TurnosContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function BookingConfirmation({ profesional, date, timeSlot, onConfirm, onCancel }) {
-  const { usuarioActual } = useTurnos();
+  const { currentUser } = useAuth();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -66,8 +67,8 @@ export default function BookingConfirmation({ profesional, date, timeSlot, onCon
           </div>
           <div className="detail-info">
             <h4>Paciente</h4>
-            <p>{usuarioActual.nombre}</p>
-            <p className="email">{usuarioActual.email}</p>
+            <p>{currentUser.username}</p>
+            <p className="email">{currentUser.email}</p>
           </div>
         </div>
       </div>

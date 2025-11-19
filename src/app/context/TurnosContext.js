@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const TurnosContext = createContext();
 
@@ -21,12 +22,8 @@ export const TurnosProvider = ({ children }) => {
   // Turnos reservados
   const [turnosReservados, setTurnosReservados] = useState([]);
 
-  // Usuario actual (simulado)
-  const [usuarioActual] = useState({
-    id: 1,
-    nombre: 'Usuario Demo',
-    email: 'usuario@demo.com'
-  });
+  // Usuario actual (arreglado)
+  const { currentUser } = useAuth();
 
   // Generar horarios disponibles para los próximos 30 días
   useEffect(() => {
@@ -85,7 +82,7 @@ export const TurnosProvider = ({ children }) => {
       profesionalId: horario.profesionalId,
       fecha: horario.fecha,
       hora: horario.hora,
-      usuario: datosUsuario || usuarioActual,
+      usuario: datosUsuario || currentUser,
       estado: 'confirmado',
       fechaReserva: new Date().toISOString()
     };
@@ -123,7 +120,7 @@ export const TurnosProvider = ({ children }) => {
     return turnosReservados.filter(t => t.profesionalId === profesionalId);
   };
 
-  const obtenerTurnosUsuario = (usuarioId = usuarioActual.id) => {
+  const obtenerTurnosUsuario = (usuarioId = currentUser.id) => {
     return turnosReservados.filter(t => t.usuario.id === usuarioId);
   };
 
@@ -140,7 +137,7 @@ export const TurnosProvider = ({ children }) => {
     setProfesionales,
     horariosDisponibles,
     turnosReservados,
-    usuarioActual,
+    currentUser,
     reservarTurno,
     cancelarTurno,
     obtenerTurnosPorProfesional,

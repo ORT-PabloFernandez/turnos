@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FaUserMd, FaCalendarAlt, FaEnvelope } from 'react-icons/fa';
 import { useTurnos } from '../context/TurnosContext';
+import './profesionales.css';
 
 export default function ProfessionalCard({ profesional }) {
   const { obtenerHorariosDisponiblesPorProfesional, obtenerTurnosPorProfesional } = useTurnos();
@@ -13,7 +14,7 @@ export default function ProfessionalCard({ profesional }) {
   return (
     <div className="professional-card">
       <div className="professional-avatar">
-        <img 
+        <img
           src={profesional.avatar} 
           alt={profesional.nombre}
           onError={(e) => {
