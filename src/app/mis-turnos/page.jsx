@@ -2,48 +2,47 @@
 
 import { useState } from 'react';
 import { useTurnos } from '../context/TurnosContext';
-import { FaCalendarCheck, FaUserMd, FaClock, FaTrash, FaCalendarAlt } from 'react-icons/fa';
+import {
+  FaCalendarCheck,
+  FaUserMd,
+  FaClock,
+  FaTrash,
+  FaCalendarAlt,
+} from 'react-icons/fa';
 import './mis-turnos.css';
 import { formatDate, parseDateTimeLocal } from '../context/Date';
 
 export default function MisTurnosPage() {
-  const { obtenerTurnosUsuario, cancelarTurno, profesionales, usuarioActual } = useTurnos();
+  const { obtenerTurnosUsuario, cancelarTurno, profesionales } = useTurnos();
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
-  
-  const misTurnos = obtenerTurnosUsuario();
-  
-  /* const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }; */
 
-  const formatTime = (timeString) => {
-    return timeString;
-  };
+  const misTurnos = obtenerTurnosUsuario();
+
+  const formatTime = (timeString) => timeString;
 
   const getProfessionalById = (id) => {
-    return profesionales.find(p => p.id === id);
+    return profesionales.find(
+      (p) => String(p._id || p.id) === String(id)
+    );
   };
 
-  const handleCancelTurno = (turnoId) => {
-    const success = cancelarTurno(turnoId);
-    if (success) {
+  const handleCancelTurno = async (turnoId) => {
+    const result = await cancelarTurno(turnoId);
+    if (result?.ok) {
       setShowCancelConfirm(null);
     }
   };
 
   const isUpcoming = (fecha, hora) => {
-    //const turnoDateTime = new Date(`${fecha}T${hora}`);
     return parseDateTimeLocal(fecha, hora) > new Date();
   };
 
-  const upcomingTurnos = misTurnos.filter(turno => isUpcoming(turno.fecha, turno.hora));
-  const pastTurnos = misTurnos.filter(turno => !isUpcoming(turno.fecha, turno.hora));
+  const upcomingTurnos = misTurnos.filter((turno) =>
+    isUpcoming(turno.fecha, turno.hora)
+  );
+  const pastTurnos = misTurnos.filter((turno) =>
+    !isUpcoming(turno.fecha, turno.hora)
+  );
 
   return (
     <div className="mis-turnos-container">
@@ -70,14 +69,16 @@ export default function MisTurnosPage() {
                 {upcomingTurnos.map((turno) => {
                   const profesional = getProfessionalById(turno.profesionalId);
                   return (
-                    <div key={turno.id} className="turno-card upcoming">
+                    <div key={turno._id} className="turno-card upcoming">
                       <div className="turno-header">
                         <div className="profesional-info">
-                          <img 
-                            src={profesional?.avatar} 
+                          <img
+                            src={profesional?.avatar}
                             alt={profesional?.nombre}
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional?.nombre || 'Doctor')}&background=3b82f6&color=fff&size=60`;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                profesional?.nombre || 'Doctor'
+                              )}&background=3b82f6&color=fff&size=60`;
                             }}
                           />
                           <div>
@@ -104,9 +105,9 @@ export default function MisTurnosPage() {
                       </div>
 
                       <div className="turno-actions">
-                        <button 
+                        <button
                           className="btn-cancel"
-                          onClick={() => setShowCancelConfirm(turno.id)}
+                          onClick={() => setShowCancelConfirm(turno._id)}
                         >
                           <FaTrash /> Cancelar
                         </button>
@@ -125,14 +126,16 @@ export default function MisTurnosPage() {
                 {pastTurnos.map((turno) => {
                   const profesional = getProfessionalById(turno.profesionalId);
                   return (
-                    <div key={turno.id} className="turno-card past">
+                    <div key={turno._id} className="turno-card past">
                       <div className="turno-header">
                         <div className="profesional-info">
-                          <img 
-                            src={profesional?.avatar} 
+                          <img
+                            src={profesional?.avatar}
                             alt={profesional?.nombre}
                             onError={(e) => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional?.nombre || 'Doctor')}&background=6b7280&color=fff&size=60`;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                profesional?.nombre || 'Doctor'
+                              )}&background=6b7280&color=fff&size=60`;
                             }}
                           />
                           <div>
@@ -166,20 +169,22 @@ export default function MisTurnosPage() {
         </>
       )}
 
-      {/* Modal de confirmación de cancelación */}
       {showCancelConfirm && (
         <div className="modal-overlay">
           <div className="modal">
             <h3>¿Cancelar turno?</h3>
-            <p>Esta acción no se puede deshacer. El horario quedará disponible para otros pacientes.</p>
+            <p>
+              Esta acción no se puede deshacer. El horario quedará disponible
+              para otros pacientes.
+            </p>
             <div className="modal-actions">
-              <button 
+              <button
                 className="btn-secondary"
                 onClick={() => setShowCancelConfirm(null)}
               >
                 No, mantener turno
               </button>
-              <button 
+              <button
                 className="btn-danger"
                 onClick={() => handleCancelTurno(showCancelConfirm)}
               >
