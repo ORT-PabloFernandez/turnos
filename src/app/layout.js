@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "./components/layouts/NavBar";
 import Footer from "./components/layouts/Footer";
 import { TurnosProvider } from "./context/TurnosContext";
+import { AuthProvider } from "./context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
         minHeight: '100vh',
         margin: 0
       }}>
+        <AuthProvider>
         <TurnosProvider>
           <Navbar />
           <div className="content-wrapper" style={{ 
@@ -38,6 +40,7 @@ export default function RootLayout({ children }) {
           </div>
           <Footer />
         </TurnosProvider>
+        </AuthProvider>
       </body>
     </html>
   );

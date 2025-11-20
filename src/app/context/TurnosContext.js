@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import { toAMD } from "./Date";
 
 const TurnosContext = createContext();
@@ -14,30 +15,6 @@ export const useTurnos = () => {
 };
 
 export const TurnosProvider = ({ children }) => {
-  // Datos de profesionales
-  // const [profesionales, setProfesionales] = useState([
-  //   {
-  //     id: 1,
-  //     nombre: 'Dr. Juan Pérez',
-  //     especialidad: 'Cardiología',
-  //     avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
-  //     email: 'juan.perez@hospital.com'
-  //   },
-  //   {
-  //     id: 2,
-  //     nombre: 'Dra. María González',
-  //     especialidad: 'Dermatología',
-  //     avatar: 'https://images.unsplash.com/photo-1594824475317-e5b8e3f5c8b5?w=150&h=150&fit=crop&crop=face',
-  //     email: 'maria.gonzalez@hospital.com'
-  //   },
-  //   {
-  //     id: 3,
-  //     nombre: 'Dr. Carlos Rodriguez',
-  //     especialidad: 'Traumatología',
-  //     avatar: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face',
-  //     email: 'carlos.rodriguez@hospital.com'
-  //   }
-  // ]);
   const [profesionales, setProfesionales] = useState([]);
 
   // Horarios disponibles
@@ -46,13 +23,9 @@ export const TurnosProvider = ({ children }) => {
   // Turnos reservados
   const [turnosReservados, setTurnosReservados] = useState([]);
 
-  // Usuario actual (simulado)
-  const [usuarioActual] = useState({
-    id: 1,
-    nombre: "Usuario Demo",
-    email: "usuario@demo.com",
-  });
-
+  // Usuario actual (arreglado)
+  const { currentUser } = useAuth();
+  
   /*
   // TODO: Descomentar cuando tengamos el user de la sesion
   const obtenerTurnosUsuario = async function fetchTurnos(){
@@ -143,7 +116,7 @@ export const TurnosProvider = ({ children }) => {
       profesionalId: horario.profesionalId,
       fecha: horario.fecha,
       hora: horario.hora,
-      usuario: datosUsuario || usuarioActual,
+      usuario: datosUsuario || currentUser,
       estado: "confirmado",
       fechaReserva: toAMD(new Date()),
     };
@@ -216,8 +189,8 @@ export const TurnosProvider = ({ children }) => {
     return turnosReservados.filter((t) => t.profesionalId === profesionalId);
   };
 
-  const obtenerTurnosUsuario = (usuarioId = usuarioActual.id) => {
-    return turnosReservados.filter((t) => t.usuario.id === usuarioId);
+  const obtenerTurnosUsuario = (usuarioId = currentUser.id) => {
+    return turnosReservados.filter(t => t.usuario.id === usuarioId);
   };
 
   const obtenerHorariosDisponiblesPorProfesional = (
@@ -236,7 +209,7 @@ export const TurnosProvider = ({ children }) => {
     setProfesionales,
     horariosDisponibles,
     turnosReservados,
-    usuarioActual,
+    currentUser,
     reservarTurno,
     cancelarTurno,
     obtenerTurnosPorProfesional,
