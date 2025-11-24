@@ -52,7 +52,6 @@ export default function TurnosPage() {
       if (success) {
         setBookingSuccess(true);
         setTimeout(() => {
-          setBookingSuccess(false);
           router.push('/mis-turnos');
         }, 3000);
       } else {

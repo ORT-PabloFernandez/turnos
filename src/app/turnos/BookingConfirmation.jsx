@@ -8,16 +8,6 @@ import { formatDate } from '../context/Date';
 export default function BookingConfirmation({ profesional, date, timeSlot, onConfirm, onCancel }) {
   const { currentUser } = useAuth();
 
-  /* const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }; */
-
   return (
     <div className="booking-confirmation">
       <div className="confirmation-header">
