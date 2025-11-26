@@ -4,15 +4,6 @@ import { FaArrowLeft, FaClock } from 'react-icons/fa';
 import { formatDate } from '../context/Date';
 
 export default function TimeSlotSelector({ profesional, date, timeSlots, onTimeSlotSelect, onBack }) {
-  /* const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }; */
 
   const groupTimeSlotsByPeriod = (slots) => {
     const morning = slots.filter(slot => {
@@ -67,7 +58,7 @@ export default function TimeSlotSelector({ profesional, date, timeSlots, onTimeS
                 <div className="time-slots-grid">
                   {morning.map((slot) => (
                     <button
-                      key={slot.id}
+                      key={slot._id}
                       className="time-slot"
                       onClick={() => onTimeSlotSelect(slot)}
                     >
@@ -85,7 +76,7 @@ export default function TimeSlotSelector({ profesional, date, timeSlots, onTimeS
                 <div className="time-slots-grid">
                   {afternoon.map((slot) => (
                     <button
-                      key={slot.id}
+                      key={slot._id}
                       className="time-slot"
                       onClick={() => onTimeSlotSelect(slot)}
                     >

@@ -1,59 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTurnos } from "../context/TurnosContext";
 import {
   FaClock,
   FaUserMd,
   FaCalendarAlt,
-  FaEye,
   FaFilter,
 } from "react-icons/fa";
 import "./horarios.css";
-import { toAMD, formatDate } from '../context/Date';
+import { formatDate } from "../context/Date";
 
 export default function HorariosPage() {
-  const { profesionales, horariosDisponibles, turnosReservados } = useTurnos();
+  // Del contexto solo usamos profesionales y turnos reservados
+  const { profesionales, turnosReservados } = useTurnos();
+
+  // Filtros
   const [selectedProfessional, setSelectedProfessional] = useState("all");
   const [selectedDate, setSelectedDate] = useState("");
-  const [viewMode, setViewMode] = useState("available"); // 'available', 'occupied', 'all'
+  const [viewMode, setViewMode] = useState("all"); // 'available', 'occupied', 'all'
 
-  /* const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  }; */
+  // Horarios que vienen del backend
+  const [horarios, setHorarios] = useState([]);
 
+  // Estado de carga y error
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  const hoyStr = new Date().toISOString().split("T")[0];
+
+  // Buscar profesional por id
   const getProfessionalById = (id) => {
     return profesionales.find((p) => p.id === id);
   };
 
+  // Buscar turno asociado a un horario
   const getTurnoByHorarioId = (horarioId) => {
     return turnosReservados.find((t) => t.horarioId === horarioId);
   };
 
-  const filteredHorarios = horariosDisponibles.filter((horario) => {
-    const matchesProfessional =
-      selectedProfessional === "all" ||
-      horario.profesionalId === parseInt(selectedProfessional);
-    const matchesDate = !selectedDate || horario.fecha === selectedDate;
+  // Llamada al backend con filtros
+  const fetchHorarios = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    let matchesViewMode = true;
-    if (viewMode === "available") {
-      matchesViewMode = horario.disponible;
-    } else if (viewMode === "occupied") {
-      matchesViewMode = !horario.disponible;
+      const params = new URLSearchParams();
+
+      if (selectedProfessional !== "all") {
+        params.append("profesionalId", selectedProfessional);
+      }
+
+      if (selectedDate) {
+        params.append("fecha", selectedDate);
+      }
+
+      const queryString = params.toString();
+      const url = queryString
+        ? "http://localhost:3000/api/horarios?" + queryString
+        : "http://localhost:3000/api/horarios";
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error("Error al obtener horarios");
+      }
+
+      const data = await res.json();
+      setHorarios(data);
+    } catch (err) {
+      console.error(err);
+      setError("Ocurrió un error al cargar los horarios");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return matchesProfessional && matchesDate && matchesViewMode;
-  });
+  // Cada vez que cambian los filtros, vuelvo a pedir al backend
+  useEffect(() => {
+    fetchHorarios();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProfessional, selectedDate, viewMode]);
+
+  // Solo horarios desde hoy
+const horariosDesdeHoy = horarios.filter((h) => h.fecha >= hoyStr);
+
+// Aplicar filtro de estado (Todos / Solo disponibles / Solo ocupados)
+const horariosFiltrados = horariosDesdeHoy.filter((h) => {
+  if (viewMode === "available") return h.disponible;
+  if (viewMode === "occupied") return !h.disponible;
+  return true; // 'all'
+});
 
   // Agrupar horarios por fecha
-  const horariosPorFecha = filteredHorarios.reduce((acc, horario) => {
+  const horariosPorFecha = horariosFiltrados.reduce((acc, horario) => {
     if (!acc[horario.fecha]) {
       acc[horario.fecha] = [];
     }
@@ -64,25 +104,17 @@ export default function HorariosPage() {
   // Ordenar fechas
   const fechasOrdenadas = Object.keys(horariosPorFecha).sort();
 
-    const getNextMonthDates = (base = new Date()) => {
-    const year = base.getFullYear();
-    const month = base.getMonth() + 1;
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0);
-    const dates = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(d.toISOString().split("T")[0]);
-    }
-    return dates;
-  };
+  const fechasDisponibles = Array.from(
+  new Set(horariosDesdeHoy.map((h) => h.fecha))
+).sort();
 
+  // Estadísticas en base a lo que devolvió el backend
   const getStats = () => {
-    const total = horariosDisponibles.length;
-    const disponibles = horariosDisponibles.filter((h) => h.disponible).length;
-    const ocupados = total - disponibles;
-
-    return { total, disponibles, ocupados };
-  };
+  const total = horariosFiltrados.length;
+  const disponibles = horariosFiltrados.filter((h) => h.disponible).length;
+  const ocupados = horariosFiltrados.filter((h) => !h.disponible).length;
+  return { total, disponibles, ocupados };
+};
 
   const stats = getStats();
 
@@ -101,7 +133,7 @@ export default function HorariosPage() {
           </div>
           <div className="stat-info">
             <h3>{stats.total}</h3>
-            <p>Total Horarios</p>
+            <p>Total Horarios (según filtros)</p>
           </div>
         </div>
         <div className="stat-card">
@@ -154,7 +186,7 @@ export default function HorariosPage() {
               onChange={(e) => setSelectedDate(e.target.value)}
             >
               <option value="">Todas las fechas</option>
-              {getNextMonthDates().map((date) => (
+              {fechasDisponibles.map((date) => (
                 <option key={date} value={date}>
                   {formatDate(date)}
                 </option>
@@ -178,7 +210,17 @@ export default function HorariosPage() {
 
       {/* Lista de horarios */}
       <div className="horarios-content">
-        {fechasOrdenadas.length === 0 ? (
+        {loading ? (
+          <div className="no-horarios">
+            <FaClock size={32} />
+            <h3>Cargando horarios...</h3>
+          </div>
+        ) : error ? (
+          <div className="no-horarios">
+            <FaClock size={32} />
+            <h3>{error}</h3>
+          </div>
+        ) : fechasOrdenadas.length === 0 ? (
           <div className="no-horarios">
             <FaClock size={48} />
             <h3>No hay horarios que mostrar</h3>
@@ -187,22 +229,26 @@ export default function HorariosPage() {
         ) : (
           fechasOrdenadas.map((fecha) => (
             <div key={fecha} className="fecha-section">
-              <h3 className="fecha-title">
-                {formatDate(fecha)}
-              </h3>
+              <h3 className="fecha-title">{formatDate(fecha)}</h3>
 
               <div className="horarios-grid">
                 {horariosPorFecha[fecha]
-                  .sort((a, b) => a.hora.localeCompare(b.hora))
+                  .sort((a, b) => {
+                    const [ha, ma] = a.hora.split(":").map(Number);
+                    const [hb, mb] = b.hora.split(":").map(Number);
+
+                    if (ha !== hb) return ha - hb;
+                    return ma - mb;
+                  })
                   .map((horario) => {
                     const profesional = getProfessionalById(
                       horario.profesionalId
                     );
-                    const turno = getTurnoByHorarioId(horario.id);
+                    const turno = getTurnoByHorarioId(horario.horarioId || horario.id || horario._id);
 
                     return (
                       <div
-                        key={horario.id}
+                        key={horario._id || horario.id}
                         className={`horario-card ${
                           horario.disponible ? "available" : "occupied"
                         }`}

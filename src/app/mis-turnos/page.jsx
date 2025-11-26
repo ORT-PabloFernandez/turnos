@@ -13,22 +13,11 @@ import "./mis-turnos.css";
 import { formatDate, parseDateTimeLocal } from "../context/Date";
 
 export default function MisTurnosPage() {
-  const { obtenerTurnosUsuario, cancelarTurno, profesionales, usuarioActual } =
+  const { obtenerTurnosUsuario, cancelarTurno, profesionales } =
     useTurnos();
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
 
-  const misTurnos = obtenerTurnosUsuario();
-
-  /* const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }; */
-
+  const misTurnos = obtenerTurnosUsuario() || [];
   const formatTime = (timeString) => {
     return timeString;
   };
@@ -40,18 +29,17 @@ export default function MisTurnosPage() {
   const [cancelError, setCancelError] = useState("");
 
   const handleCancelTurno = async (turnoId) => {
-    const result = await cancelarTurno(turnoId);
+  const ok = await cancelarTurno(turnoId);    
 
-    if (result.ok) {
-      setShowCancelConfirm(null);
-      setCancelError("");
-    } else {
-      setCancelError(result.message || "No se pudo cancelar el turno");
-    }
-  };
+  if (ok) {
+    setShowCancelConfirm(null);
+    setCancelError("");
+  } else {
+    setCancelError("No se pudo cancelar el turno");
+  }
+};
 
   const isUpcoming = (fecha, hora) => {
-    //const turnoDateTime = new Date(`${fecha}T${hora}`);
     return parseDateTimeLocal(fecha, hora) > new Date();
   };
 
@@ -65,10 +53,14 @@ export default function MisTurnosPage() {
     return diff >= MILISEGUNDOS_EN_24HS;
   };
 
-  const upcomingTurnos = misTurnos.filter((turno) =>
+  const turnosValidos = misTurnos.filter(
+  (t) => t.fecha && t.hora
+  );
+
+  const upcomingTurnos = turnosValidos.filter((turno) =>
     isUpcoming(turno.fecha, turno.hora)
   );
-  const pastTurnos = misTurnos.filter(
+  const pastTurnos = turnosValidos.filter(
     (turno) => !isUpcoming(turno.fecha, turno.hora)
   );
 
@@ -99,7 +91,7 @@ export default function MisTurnosPage() {
                 {upcomingTurnos.map((turno) => {
                   const profesional = getProfessionalById(turno.profesionalId);
                   return (
-                    <div key={turno.id} className="turno-card upcoming">
+                    <div key={turno._id || turno._id} className="turno-card upcoming">
                       <div className="turno-header">
                         <div className="profesional-info">
                           <img
@@ -141,7 +133,7 @@ export default function MisTurnosPage() {
                           }`}
                           onClick={() => {
                             if (canCancelLocal(turno.fecha, turno.hora)) {
-                              setShowCancelConfirm(turno.id);
+                              setShowCancelConfirm(turno._id || turno.id);
                             }
                           }}
                           disabled={!canCancelLocal(turno.fecha, turno.hora)}
@@ -168,7 +160,7 @@ export default function MisTurnosPage() {
                 {pastTurnos.map((turno) => {
                   const profesional = getProfessionalById(turno.profesionalId);
                   return (
-                    <div key={turno.id} className="turno-card past">
+                    <div key={turno._id || turno._id} className="turno-card past">
                       <div className="turno-header">
                         <div className="profesional-info">
                           <img

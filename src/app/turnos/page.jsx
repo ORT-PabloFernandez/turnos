@@ -46,17 +46,18 @@ export default function TurnosPage() {
     setShowConfirmation(true);
   };
 
-  const handleBookingConfirm = () => {
+  const handleBookingConfirm = async () => {
     if (selectedTimeSlot) {
-      const success = reservarTurno(selectedTimeSlot.id);
+      const success = await reservarTurno(selectedTimeSlot._id);
       if (success) {
         setBookingSuccess(true);
         setTimeout(() => {
-          setBookingSuccess(false);
           router.push('/mis-turnos');
         }, 3000);
-      }
+      } else {
+      console.error('No se pudo reservar el turno');
     }
+  }
   };
 
   const handleBookingCancel = () => {

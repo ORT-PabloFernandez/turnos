@@ -42,7 +42,14 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) throw new Error(data.message || 'Error en el login');
 
       const userToken = data.token || data.accessToken;
-      const userData = data.user || data;
+      const rawUser = data.user || data;
+
+  // Normalizar el usuario para asegurar id, nombre y email
+  const userData = {
+    id: rawUser._id,
+    nombre: rawUser.username,
+    email: rawUser.email,
+  };
 
       setToken(userToken);
       setCurrentUser(userData);

@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { toAMD } from "./Date";
+//import { toAMD } from "./Date";
 
-const TurnosContext = createContext();
+const TurnosContext = createContext(null);
 
 export const useTurnos = () => {
   const context = useContext(TurnosContext);
@@ -14,21 +14,106 @@ export const useTurnos = () => {
   return context;
 };
 
+// Saca un id de usuario "usable" desde currentUser
+const getUserIdFromCurrentUser = (user) => {
+  if (!user) return null;
+
+  if (user.id) return user.id;                         // por si en algún momento tiene id
+  if (user._id?.$oid) return user._id.$oid;           // formato típico de Mongo en JSON
+  if (typeof user._id === "string") return user._id;  // por si ya viene como string
+
+  return null;
+};
+
 export const TurnosProvider = ({ children }) => {
   const [profesionales, setProfesionales] = useState([]);
 
   // Horarios disponibles
-  const [horariosDisponibles, setHorariosDisponibles] = useState([]);
+  const [horarios, setHorarios] = useState([]);
 
   // Turnos reservados
   const [turnosReservados, setTurnosReservados] = useState([]);
 
   // Usuario actual (arreglado)
-  const { currentUser } = useAuth();
-  
-  /*
+  const { currentUser, token } = useAuth();
+
+  console.log("TOKEN ENVIADO:", token);
+
+  //fetch para traer todos los profesionales
+  const cargarProfesionales = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/profesionales");
+      const data = await response.json();
+      console.log("Profesionales:", data);
+      setProfesionales(data);
+    } catch (error) {
+      console.log("Error cargando profesionales:", error);
+    }
+  };
+
+  // Cargar horarios desde el backend
+  const cargarHorarios = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/horarios");
+      const data = await response.json();
+      console.log("Horarios:", data);
+      setHorarios(data);
+    } catch (error) {
+      console.log("Error cargando horarios:", error);
+    }
+  };
+
+  // Cargar turnos del usuario desde el backend
+  const cargarTurnosUsuario = async () => {
+    if (!currentUser) {
+      setTurnosReservados([]);
+      return;
+    }
+    const userId = getUserIdFromCurrentUser(currentUser);
+
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/turnos?usuarioId=${userId}`
+      );
+      const data = await response.json();
+      console.log("Turnos usuario:", data);
+      setTurnosReservados(data);
+    } catch (error) {
+      console.log("Error cargando turnos del usuario:", error);
+    }
+  };
+
+  // useEffect de carga inicial
+
+  useEffect(() => {
+    cargarProfesionales();
+    cargarHorarios();
+  }, []);
+
+  useEffect(() => {
+    cargarTurnosUsuario();
+  }, [currentUser]);
+
+  // Funciones de consulta
+
+const obtenerHorariosDisponiblesPorProfesional = (
+    profesionalId,
+    fecha = null
+  ) => {
+    return horarios.filter((h) => {
+      const coincideProfesional = h.profesionalId === profesionalId;
+      const coincideFecha = fecha ? h.fecha === fecha : true;
+      return coincideProfesional && coincideFecha && h.disponible === true;
+    });
+  };
+
+  const obtenerTurnosPorProfesional = (profesionalId) => {
+    return turnosReservados.filter((t) => t.profesionalId === profesionalId);
+  };
+
   // TODO: Descomentar cuando tengamos el user de la sesion
-  const obtenerTurnosUsuario = async function fetchTurnos(){
+  /*const obtenerTurnosUsuario = async function fetchTurnos(){
     try {
       const response = await fetch('http://localhost:3000/api/turnos/usuario/1');
       const data = await response.json();
@@ -43,178 +128,116 @@ export const TurnosProvider = ({ children }) => {
     obtenerTurnosUsuario(); 
   }, [])*/
 
-  //fetch para traer todos los profesionales
-  useEffect(() => {
-    async function fetchProfesionales() {
-      try {
-        const response = await fetch("http://localhost:3000/api/profesionales");
-        const data = await response.json();
-        console.log(data);
-        setProfesionales(data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    fetchProfesionales();
-  }, []);
-
-  // Generar horarios disponibles para los próximos 30 días
-  useEffect(() => {
-    const generarHorarios = () => {
-      const horarios = [];
-      const hoy = new Date();
-
-      for (let dia = 1; dia <= 30; dia++) {
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() + dia);
-
-        // Solo días laborables (lunes a viernes)
-        if (fecha.getDay() >= 1 && fecha.getDay() <= 5) {
-          const fechaAMD = toAMD(fecha);
-          profesionales.forEach((profesional) => {
-            // Horarios de mañana: 9:00 - 12:00
-            for (let hora = 9; hora < 12; hora++) {
-              horarios.push({
-                id: `${profesional.id}-${fechaAMD}-${hora}:00`,
-                profesionalId: profesional.id,
-                fecha: fechaAMD,
-                hora: `${hora}:00`,
-                disponible: true,
-              });
-            }
-
-            // Horarios de tarde: 14:00 - 17:00
-            for (let hora = 14; hora < 17; hora++) {
-              horarios.push({
-                id: `${profesional.id}-${fechaAMD}-${hora}:00`,
-                profesionalId: profesional.id,
-                fecha: fechaAMD,
-                hora: `${hora}:00`,
-                disponible: true,
-              });
-            }
-          });
-        }
-      }
-
-      setHorariosDisponibles(horarios);
-    };
-
-    if (profesionales.length > 0) {
-      generarHorarios();
-    }
-  }, [profesionales]);
-
-  // Funciones para gestionar turnos
-  const reservarTurno = (horarioId, datosUsuario = null) => {
-    const horario = horariosDisponibles.find((h) => h.id === horarioId);
-    if (!horario || !horario.disponible) return false;
-
-    const nuevoTurno = {
-      id: Date.now(),
-      horarioId: horarioId,
-      profesionalId: horario.profesionalId,
-      fecha: horario.fecha,
-      hora: horario.hora,
-      usuario: datosUsuario || currentUser,
-      estado: "confirmado",
-      fechaReserva: toAMD(new Date()),
-    };
-
-    setTurnosReservados((prev) => [...prev, nuevoTurno]);
-
-    // Marcar horario como no disponible
-    setHorariosDisponibles((prev) =>
-      prev.map((h) => (h.id === horarioId ? { ...h, disponible: false } : h))
-    );
-
-    return true;
+  const obtenerTurnosUsuario = () => {
+    return turnosReservados;
   };
+
+  //Reservar turno
+  const reservarTurno = async (horarioId) => {
+    try {
+      if (!currentUser) {
+        console.warn("Debe estar logueado para reservar turno");
+        return false;
+      }
+       const userId = getUserIdFromCurrentUser(currentUser);
+
+    console.log(">>> Enviando al backend:", {
+      horarioId,
+      usuario: {
+        id: userId,
+        nombre:
+          currentUser.nombre ||
+          currentUser.name ||
+          currentUser.username ||
+          "Paciente",
+        email: currentUser.email,
+      },
+    });
+      const res = await fetch("http://localhost:3000/api/turnos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+  },
+        body: JSON.stringify({
+          horarioId,
+          usuario: {
+          id: userId,
+          nombre:
+            currentUser.nombre ||
+            currentUser.name ||
+            currentUser.username ||
+            "Paciente",
+          email: currentUser.email,
+        },
+        }),
+      });
+
+      if (!res.ok) {
+      let errorData = {};
+      try {
+        errorData = await res.json();
+      } catch (e) {}
+      console.error("Error al crear turno:", res.status, errorData);
+      return false;
+    }
+
+      // Actualizar frontend
+      await cargarHorarios();
+      await cargarTurnosUsuario();
+
+      return true;
+    } catch (error) {
+      console.error("Error reservando turno:", error);
+      return false;
+    }
+  };
+
+  // Cancelar turno
 
   const cancelarTurno = async (turnoId) => {
-    const turno = turnosReservados.find((t) => t.id === turnoId);
-    if (!turno) {
-      return { ok: false, message: "Turno no encontrado en el cliente" };
-    }
-
-    // Cuando los turnos vengan del backend,
-    // aquí deberá existir un identificador real de BD.
-    const backendId = turno._id || turno.backendId;
-
-    if (backendId) {
-      try {
-        const response = await fetch(
-          `http://localhost:3000/api/turnos/${backendId}`,
-          {
-            method: "DELETE",
-          }
-        );
-
-        if (response.status === 400 || response.status === 404) {
-          const data = await response.json().catch(() => ({}));
-          return {
-            ok: false,
-            message: data.message || "No se pudo cancelar el turno",
-          };
-        }
-
-        if (!response.ok) {
-          return {
-            ok: false,
-            message: "Error interno al cancelar el turno",
-          };
-        }
-      } catch (error) {
-        console.error("Error de red al cancelar turno:", error);
-        return {
-          ok: false,
-          message: "Error de red al cancelar el turno",
-        };
-      }
-    }
-
-    // Comportamiento local (mock) que ya tenía:
-    setTurnosReservados((prev) => prev.filter((t) => t.id !== turnoId));
-
-    setHorariosDisponibles((prev) =>
-      prev.map((h) =>
-        h.id === turno.horarioId ? { ...h, disponible: true } : h
-      )
-    );
-
-    return { ok: true };
-  };
-
-  const obtenerTurnosPorProfesional = (profesionalId) => {
-    return turnosReservados.filter((t) => t.profesionalId === profesionalId);
-  };
-
-  const obtenerTurnosUsuario = (usuarioId = currentUser.id) => {
-    return turnosReservados.filter(t => t.usuario.id === usuarioId);
-  };
-
-  const obtenerHorariosDisponiblesPorProfesional = (
-    profesionalId,
-    fecha = null
-  ) => {
-    return horariosDisponibles.filter((h) => {
-      const coincideProfesional = h.profesionalId === profesionalId;
-      const coincideFecha = fecha ? h.fecha === fecha : true;
-      return coincideProfesional && coincideFecha && h.disponible;
+  try {
+    const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     });
-  };
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (e) {
+    }
+
+    if (!res.ok) {
+      console.error("Error al cancelar el turno:", res.status, data);
+      return false;
+    }
+
+    // Actualizar frontend
+    await cargarHorarios();
+    await cargarTurnosUsuario();
+
+    return true;
+  } catch (err) {
+    console.error("Error de red al cancelar turno:", err);
+    return false;
+  }
+};
 
   const value = {
     profesionales,
     setProfesionales,
-    horariosDisponibles,
+    horarios,
+    setHorarios,
+    cargarHorarios,
     turnosReservados,
-    currentUser,
     reservarTurno,
     cancelarTurno,
+    obtenerHorariosDisponiblesPorProfesional,
     obtenerTurnosPorProfesional,
     obtenerTurnosUsuario,
-    obtenerHorariosDisponiblesPorProfesional,
   };
 
   return (
