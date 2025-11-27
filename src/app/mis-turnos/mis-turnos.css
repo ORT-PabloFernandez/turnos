@@ -1,4 +1,4 @@
-/* Mis Turnos Page Styles */
+/* === LAYOUT GENERAL === */
 .mis-turnos-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -22,7 +22,7 @@
   color: #666;
 }
 
-/* No Turnos State */
+/* === ESTADOS VACÍOS === */
 .no-turnos {
   text-align: center;
   padding: 4rem 2rem;
@@ -48,6 +48,7 @@
   font-size: 1.125rem;
 }
 
+/* === BOTONES GENERALES === */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -59,13 +60,38 @@
   text-decoration: none;
   font-weight: 500;
   transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-primary:hover {
   background-color: #2563eb;
 }
 
-/* Turnos Sections */
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary-outline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary-outline:hover {
+  background-color: #eff6ff;
+}
+
+/* === SECCIONES Y GRID === */
 .turnos-section {
   margin-bottom: 3rem;
 }
@@ -83,7 +109,7 @@
   gap: 1.5rem;
 }
 
-/* Turno Card */
+/* === TARJETA DE TURNO === */
 .turno-card {
   background: white;
   border-radius: 12px;
@@ -147,6 +173,41 @@
   color: #3b82f6;
 }
 
+/* === ESTRELLAS (Corrección para que se vean horizontales) === */
+.stars-display {
+  display: flex; /* CRUCIAL: Hace que las estrellas se alineen horizontalmente */
+  flex-direction: row;
+  gap: 2px;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  color: #fbbf24;
+}
+
+.stars-display.interactive {
+  cursor: pointer;
+}
+
+.star-icon-card.empty {
+  color: #d1d5db;
+}
+
+.rating-count {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-left: 6px;
+}
+
+.already-rated-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #10b981;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+/* === DETALLES Y ESTADO === */
 .turno-status {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -187,9 +248,12 @@
   height: 16px;
 }
 
+/* === ACCIONES Y BOTONES DE TARJETA === */
 .turno-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap; /* Para que no se rompa en móviles */
 }
 
 .btn-cancel {
@@ -212,15 +276,48 @@
 }
 
 .btn-cancel.disabled {
+<<<<<<< HEAD
   background-color: #9ca3af !important;
+=======
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+>>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
   cursor: not-allowed !important;
-  opacity: 0.7;
+  opacity: 1;
 }
 
-.btn-cancel.disabled:hover {
-  background-color: #9ca3af !important;
+/* Estilos para botón Modificar (Estos son los que se perdieron) */
+.btn-modify {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fef3c7; /* Amarillo suave */
+  color: #d97706; /* Texto ámbar */
+  border: 1px solid #fcd34d;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
+<<<<<<< HEAD
+=======
+.btn-modify:hover {
+  background-color: #fde68a;
+}
+
+.btn-modify.disabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+  cursor: not-allowed !important;
+  opacity: 1;
+}
+
+/* === MODALES === */
+>>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -243,6 +340,10 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
 }
 
+.modal-lg {
+  max-width: 600px;
+}
+
 .modal h3 {
   color: #333;
   margin: 0 0 1rem 0;
@@ -261,6 +362,44 @@
   justify-content: flex-end;
 }
 
+/* Grid de horarios en el modal */
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.slot-button {
+  padding: 10px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.slot-button:hover {
+  background-color: #e5e7eb;
+}
+
+.slot-button.selected {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.no-slots {
+  text-align: center;
+  color: #6b7280;
+  grid-column: 1 / -1;
+  padding: 20px;
+}
+
+/* Botones de Modal */
 .btn-secondary {
   background-color: #f3f4f6;
   color: #374151;
@@ -291,6 +430,32 @@
   background-color: #b91c1c;
 }
 
+<<<<<<< HEAD
+=======
+/* Estrellas en el Modal */
+.modal-stars-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.modal-star {
+  transition: color 0.2s;
+}
+
+.modal-star.filled {
+  color: #fbbf24;
+}
+
+.modal-star.empty {
+  color: #e5e7eb;
+}
+
+/* === RESPONSIVE === */
+>>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
 @media (max-width: 768px) {
   .mis-turnos-container {
     padding: 1rem;
