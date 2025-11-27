@@ -1,10 +1,18 @@
 'use client';
 
-import { FaUserMd } from 'react-icons/fa';
+import { FaUserMd, FaArrowLeft } from 'react-icons/fa';
 
-export default function ProfessionalSelector({ profesionales, onSelect }) {
+export default function ProfessionalSelector({ profesionales, onSelect, onBack }) {
   return (
     <div className="professional-selector">
+      {onBack && (
+        <button
+          className="back-button"
+          onClick={onBack}
+        >
+          <FaArrowLeft /> Cambiar Especialidad
+        </button>
+      )}
       <h2>Selecciona un Profesional</h2>
       <div className="professionals-grid">
         {profesionales.map((profesional) => (
