@@ -276,13 +276,9 @@
 }
 
 .btn-cancel.disabled {
-<<<<<<< HEAD
-  background-color: #9ca3af !important;
-=======
   background-color: #f3f4f6 !important;
   color: #9ca3af !important;
   border-color: #e5e7eb !important;
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
   cursor: not-allowed !important;
   opacity: 1;
 }
@@ -302,8 +298,6 @@
   transition: all 0.2s;
 }
 
-<<<<<<< HEAD
-=======
 .btn-modify:hover {
   background-color: #fde68a;
 }
@@ -317,7 +311,6 @@
 }
 
 /* === MODALES === */
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -430,8 +423,6 @@
   background-color: #b91c1c;
 }
 
-<<<<<<< HEAD
-=======
 /* Estrellas en el Modal */
 .modal-stars-container {
   display: flex;
@@ -454,8 +445,7 @@
   color: #e5e7eb;
 }
 
-/* === RESPONSIVE === */
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
+
 @media (max-width: 768px) {
   .mis-turnos-container {
     padding: 1rem;

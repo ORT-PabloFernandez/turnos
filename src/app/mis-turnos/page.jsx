@@ -14,10 +14,7 @@ import {
   FaStar,
   FaRegStar,
   FaCheckCircle,
-<<<<<<< HEAD
-=======
   FaEdit,
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
 } from "react-icons/fa";
 import "./mis-turnos.css";
 import { formatDate, parseDateTimeLocal } from "../context/Date";
@@ -29,18 +26,12 @@ export default function MisTurnosPage() {
     calificarProfesional,
     obtenerPromedio,
     hasRatedTurno,
-<<<<<<< HEAD
-=======
     comenzarModificacion, // Importamos la función
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
     profesionales,
     horarios,
   } = useTurnos();
   const { currentUser } = useAuth();
-<<<<<<< HEAD
-=======
   const router = useRouter();
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
   const [showModifyConfirm, setShowModifyConfirm] = useState(null);
@@ -89,8 +80,6 @@ export default function MisTurnosPage() {
     }
   };
 
-<<<<<<< HEAD
-=======
   const handleModifyTurno = async (turno) => {
     const turnoId = turno._id || turno.id;
 
@@ -108,7 +97,6 @@ export default function MisTurnosPage() {
     }
   };
 
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
   const handleRateSubmit = () => {
     if (rateModal && ratingScore > 0) {
       calificarProfesional(rateModal.profesionalId, ratingScore, rateModal.id);
@@ -226,20 +214,6 @@ export default function MisTurnosPage() {
 
         <div className="turno-actions">
           {statusClass === "upcoming" && (
-<<<<<<< HEAD
-            <button
-              className={`btn-cancel ${
-                !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
-              }`}
-              onClick={() => {
-                if (canCancelLocal(turno.fecha, turno.hora))
-                  setShowCancelConfirm(turno._id || turno.id);
-              }}
-              disabled={!canCancelLocal(turno.fecha, turno.hora)}
-            >
-              <FaTrash /> Cancelar
-            </button>
-=======
             <>
               <button
                 className={`btn-modify ${
@@ -277,7 +251,6 @@ export default function MisTurnosPage() {
                 <FaTrash /> Cancelar
               </button>
             </>
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
           )}
 
           {statusClass === "past" && !isMedico && (
@@ -293,19 +266,11 @@ export default function MisTurnosPage() {
                     })
                   }
                 >
-<<<<<<< HEAD
-                  <FaStar /> Califica este Turno
-                </button>
-              ) : (
-                <div className="already-rated-badge">
-                  <FaCheckCircle /> Ya calificaste, gracias!
-=======
                   <FaStar /> CALIFICA ESTE TURNO
                 </button>
               ) : (
                 <div className="already-rated-badge">
                   <FaCheckCircle /> Ya calificaste
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
                 </div>
               )}
             </>
@@ -392,8 +357,6 @@ export default function MisTurnosPage() {
         </div>
       )}
 
-<<<<<<< HEAD
-=======
       {showModifyConfirm && (
         <div className="modal-overlay">
           <div className="modal">
@@ -420,7 +383,6 @@ export default function MisTurnosPage() {
         </div>
       )}
 
->>>>>>> dd3e6f2 (agregado detalle de dia y horario en las notificaciones de reserva de turno, cancelacion de turno y modificacion de turno)
       {rateModal && (
         <div className="modal-overlay">
           <div className="modal">
