@@ -12,6 +12,7 @@ import {
   FaCalendarAlt,
   FaStar,
   FaRegStar,
+  FaCheckCircle,
 } from "react-icons/fa";
 import "./mis-turnos.css";
 import { formatDate, parseDateTimeLocal } from "../context/Date";
@@ -22,6 +23,7 @@ export default function MisTurnosPage() {
     cancelarTurno,
     calificarProfesional,
     obtenerPromedio,
+    hasRatedTurno,
     profesionales,
     horarios,
   } = useTurnos();
@@ -41,11 +43,9 @@ export default function MisTurnosPage() {
 
   const misTurnos = misTurnosRaw.map((turno) => {
     if (turno.fecha && turno.hora) return turno;
-
     const horarioData = horarios.find(
       (h) => h.id === turno.horarioId || h._id === turno.horarioId
     );
-
     if (horarioData) {
       return {
         ...turno,
@@ -57,9 +57,7 @@ export default function MisTurnosPage() {
     return turno;
   });
 
-  const formatTime = (timeString) => {
-    return timeString;
-  };
+  const formatTime = (timeString) => timeString;
 
   const getProfessionalById = (id) => {
     return profesionales.find(
@@ -79,7 +77,7 @@ export default function MisTurnosPage() {
 
   const handleRateSubmit = () => {
     if (rateModal && ratingScore > 0) {
-      calificarProfesional(rateModal.profesionalId, ratingScore);
+      calificarProfesional(rateModal.profesionalId, ratingScore, rateModal.id);
       setRateModal(null);
       setRatingScore(0);
       setHoverScore(0);
@@ -95,13 +93,10 @@ export default function MisTurnosPage() {
     if (!fecha || !hora) return false;
     const turnoDateTime = parseDateTimeLocal(fecha, hora);
     const now = new Date();
-    const diff = turnoDateTime.getTime() - now.getTime();
-    const MILISEGUNDOS_EN_24HS = 24 * 60 * 60 * 1000;
-    return diff >= MILISEGUNDOS_EN_24HS;
+    return turnoDateTime.getTime() - now.getTime() >= 86400000;
   };
 
   const turnosValidos = misTurnos.filter((t) => t.fecha && t.hora);
-
   const upcomingTurnos = turnosValidos.filter((turno) =>
     isUpcoming(turno.fecha, turno.hora)
   );
@@ -109,29 +104,19 @@ export default function MisTurnosPage() {
     (turno) => !isUpcoming(turno.fecha, turno.hora)
   );
 
-  const renderStars = (score) => {
+  const renderStaticStars = (score) => {
     return (
-      <div
-        style={{
-          display: "flex",
-          gap: "2px",
-          color: "#fbbf24",
-          fontSize: "0.8rem",
-          marginTop: "4px",
-        }}
-      >
-        {[1, 2, 3, 4, 5].map((star) =>
-          star <= Math.round(score) ? (
-            <FaStar key={star} />
-          ) : (
-            <FaRegStar key={star} style={{ color: "#d1d5db" }} />
-          )
-        )}
-        <span
-          style={{ color: "#6b7280", fontSize: "0.75rem", marginLeft: "4px" }}
-        >
-          ({score > 0 ? score : "-"})
-        </span>
+      <div className="stars-display">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`star-icon-card ${
+              star <= Math.round(score) ? "filled" : "empty"
+            }`}
+          >
+            {star <= Math.round(score) ? <FaStar /> : <FaRegStar />}
+          </span>
+        ))}
       </div>
     );
   };
@@ -141,14 +126,16 @@ export default function MisTurnosPage() {
     const pacienteNombre = turno.usuario?.nombre || "Paciente";
     const pacienteEmail = turno.usuario?.email || "";
 
-    // Obtenemos el promedio para mostrarlo
-    const promedio =
+    const promedioMedico =
       !isMedico && profesional
         ? obtenerPromedio(profesional.id || profesional._id)
         : 0;
 
+    const turnoId = turno._id || turno.id;
+    const isRated = hasRatedTurno(turnoId);
+
     return (
-      <div key={turno._id || turno.id} className={`turno-card ${statusClass}`}>
+      <div key={turnoId} className={`turno-card ${statusClass}`}>
         <div className="turno-header">
           <div className="profesional-info">
             <img
@@ -171,16 +158,18 @@ export default function MisTurnosPage() {
               <p className="especialidad">
                 {!isMedico ? (
                   <>
-                    <FaUserMd /> {profesional?.especialidad || "General"}
+                    {" "}
+                    <FaUserMd /> {profesional?.especialidad || "General"}{" "}
                   </>
                 ) : (
                   <>
-                    <FaUser /> {pacienteEmail || "Paciente"}
+                    {" "}
+                    <FaUser /> {pacienteEmail || "Paciente"}{" "}
                   </>
                 )}
               </p>
 
-              {!isMedico && renderStars(promedio)}
+              {!isMedico && renderStaticStars(promedioMedico)}
             </div>
           </div>
           <div
@@ -194,12 +183,10 @@ export default function MisTurnosPage() {
 
         <div className="turno-details">
           <div className="detail">
-            <FaCalendarAlt />
-            <span>{formatDate(turno.fecha)}</span>
+            <FaCalendarAlt /> <span>{formatDate(turno.fecha)}</span>
           </div>
           <div className="detail">
-            <FaClock />
-            <span>{formatTime(turno.hora)}</span>
+            <FaClock /> <span>{formatTime(turno.hora)}</span>
           </div>
         </div>
 
@@ -210,9 +197,8 @@ export default function MisTurnosPage() {
                 !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
               }`}
               onClick={() => {
-                if (canCancelLocal(turno.fecha, turno.hora)) {
+                if (canCancelLocal(turno.fecha, turno.hora))
                   setShowCancelConfirm(turno._id || turno.id);
-                }
               }}
               disabled={!canCancelLocal(turno.fecha, turno.hora)}
             >
@@ -221,17 +207,26 @@ export default function MisTurnosPage() {
           )}
 
           {statusClass === "past" && !isMedico && (
-            <button
-              className="btn-primary-outline"
-              onClick={() =>
-                setRateModal({
-                  profesionalId: turno.profesionalId,
-                  nombre: profesional?.nombre,
-                })
-              }
-            >
-              <FaStar /> Calificar
-            </button>
+            <>
+              {!isRated ? (
+                <button
+                  className="btn-primary"
+                  onClick={() =>
+                    setRateModal({
+                      id: turnoId,
+                      profesionalId: turno.profesionalId,
+                      nombre: profesional?.nombre,
+                    })
+                  }
+                >
+                  <FaStar /> CALIFICA ESTE TURNO
+                </button>
+              ) : (
+                <div className="already-rated-badge">
+                  <FaCheckCircle /> Ya calificaste
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -279,7 +274,6 @@ export default function MisTurnosPage() {
               </div>
             </div>
           )}
-
           {pastTurnos.length > 0 && (
             <div className="turnos-section">
               <h2>Historial</h2>
@@ -324,37 +318,21 @@ export default function MisTurnosPage() {
               ¿Qué te pareció la atención de <strong>{rateModal.nombre}</strong>
               ?
             </p>
-
-            <div
-              className="stars-container"
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "10px",
-                margin: "20px 0",
-                fontSize: "2rem",
-                cursor: "pointer",
-              }}
-            >
+            <div className="modal-stars-container">
               {[1, 2, 3, 4, 5].map((star) => (
                 <span
                   key={star}
+                  className={`modal-star ${
+                    star <= (hoverScore || ratingScore) ? "filled" : "empty"
+                  }`}
                   onMouseEnter={() => setHoverScore(star)}
                   onMouseLeave={() => setHoverScore(0)}
                   onClick={() => setRatingScore(star)}
-                  style={{
-                    color:
-                      star <= (hoverScore || ratingScore)
-                        ? "#fbbf24"
-                        : "#e5e7eb",
-                    transition: "color 0.2s",
-                  }}
                 >
                   <FaStar />
                 </span>
               ))}
             </div>
-
             <div className="modal-actions">
               <button
                 className="btn-secondary"
@@ -369,7 +347,6 @@ export default function MisTurnosPage() {
                 className="btn-primary"
                 onClick={handleRateSubmit}
                 disabled={ratingScore === 0}
-                style={{ opacity: ratingScore === 0 ? 0.5 : 1 }}
               >
                 Enviar Opinión
               </button>
