@@ -23,7 +23,13 @@ export default function BookingConfirmation({ profesional, date, timeSlot, onCon
           <div className="detail-info">
             <h4>Profesional</h4>
             <div className="professional-info">
-              <img src={profesional.avatar} alt={profesional.nombre} />
+              <img 
+                src={profesional.avatar} 
+                alt={profesional.nombre} 
+                onError={(e) => {
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional.nombre)}&background=3b82f6&color=fff&size=80`;
+                }}
+                />
               <div>
                 <p className="name">{profesional.nombre}</p>
                 <p className="specialty">{profesional.especialidad}</p>

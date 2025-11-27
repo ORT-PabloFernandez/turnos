@@ -73,7 +73,13 @@ export default function CalendarView({ profesional, onDateSelect, onBack }) {
           <FaArrowLeft /> Cambiar Profesional
         </button>
         <div className="selected-professional">
-          <img src={profesional.avatar} alt={profesional.nombre} />
+          <img 
+            src={profesional.avatar} 
+            alt={profesional.nombre}
+            onError={(e) => {
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profesional.nombre)}&background=3b82f6&color=fff&size=80`;
+              }}
+            />
           <div>
             <h3>{profesional.nombre}</h3>
             <p>{profesional.especialidad}</p>
