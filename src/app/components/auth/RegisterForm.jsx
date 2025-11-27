@@ -104,7 +104,7 @@ const RegisterForm = () => {
 
           <div className="form-group">
             <label htmlFor="name" className="form-label">
-              Nombre Completo
+              Nombre de usuario
             </label>
             <div className="input-container">
               <FaUser className="input-icon" />
@@ -115,7 +115,7 @@ const RegisterForm = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="Tu nombre completo"
+                placeholder="Tu nombre de usuario"
                 required
               />
             </div>
