@@ -191,3 +191,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.stars-container {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  font-size: 0.9rem;
+  margin: 5px 0;
+  color: #fbbf24;
+}
+
+.star-icon {
+}
+
+.star-icon.empty {
+  color: #d1d5db;
+}
+
+.rating-text {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-left: 6px;
+  font-weight: 500;
+}
