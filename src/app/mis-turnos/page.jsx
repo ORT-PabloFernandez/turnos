@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-// CORRECCIÓN: Rutas relativas correctas (subimos un nivel con ..)
+import { useRouter } from "next/navigation";
 import { useTurnos } from "../context/TurnosContext";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -11,32 +11,45 @@ import {
   FaClock,
   FaTrash,
   FaCalendarAlt,
+  FaStar,
+  FaRegStar,
+  FaCheckCircle,
+  FaEdit,
 } from "react-icons/fa";
 import "./mis-turnos.css";
 import { formatDate, parseDateTimeLocal } from "../context/Date";
 
 export default function MisTurnosPage() {
-  const { obtenerTurnosUsuario, cancelarTurno, profesionales, horarios } =
-    useTurnos();
-  const { currentUser } = useAuth(); // Obtenemos el usuario actual
+  const {
+    obtenerTurnosUsuario,
+    cancelarTurno,
+    calificarProfesional,
+    obtenerPromedio,
+    hasRatedTurno,
+    profesionales,
+    horarios,
+  } = useTurnos();
+  const { currentUser } = useAuth();
+  const router = useRouter();
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
+  const [showModifyConfirm, setShowModifyConfirm] = useState(null);
   const [cancelError, setCancelError] = useState("");
 
-  // Detectamos si es médico para adaptar la vista
+  const [rateModal, setRateModal] = useState(null);
+  const [ratingScore, setRatingScore] = useState(0);
+  const [hoverScore, setHoverScore] = useState(0);
+
   const isMedico =
     currentUser?.rol === "medico" || currentUser?.role === "doctor";
 
   const misTurnosRaw = obtenerTurnosUsuario() || [];
 
-  // ENRIQUECIMIENTO DE DATOS
   const misTurnos = misTurnosRaw.map((turno) => {
     if (turno.fecha && turno.hora) return turno;
-
     const horarioData = horarios.find(
       (h) => h.id === turno.horarioId || h._id === turno.horarioId
     );
-
     if (horarioData) {
       return {
         ...turno,
@@ -48,9 +61,7 @@ export default function MisTurnosPage() {
     return turno;
   });
 
-  const formatTime = (timeString) => {
-    return timeString;
-  };
+  const formatTime = (timeString) => timeString;
 
   const getProfessionalById = (id) => {
     return profesionales.find(
@@ -68,6 +79,26 @@ export default function MisTurnosPage() {
     }
   };
 
+  const handleModifyTurno = async (turno) => {
+    const turnoId = turno._id || turno.id;
+    const ok = await cancelarTurno(turnoId);
+    if (ok) {
+      setShowModifyConfirm(null);
+      router.push(`/turnos?profesional=${turno.profesionalId}`);
+    } else {
+      setCancelError("Error al intentar modificar el turno");
+    }
+  };
+
+  const handleRateSubmit = () => {
+    if (rateModal && ratingScore > 0) {
+      calificarProfesional(rateModal.profesionalId, ratingScore, rateModal.id);
+      setRateModal(null);
+      setRatingScore(0);
+      setHoverScore(0);
+    }
+  };
+
   const isUpcoming = (fecha, hora) => {
     if (!fecha || !hora) return false;
     return parseDateTimeLocal(fecha, hora) > new Date();
@@ -77,13 +108,10 @@ export default function MisTurnosPage() {
     if (!fecha || !hora) return false;
     const turnoDateTime = parseDateTimeLocal(fecha, hora);
     const now = new Date();
-    const diff = turnoDateTime.getTime() - now.getTime();
-    const MILISEGUNDOS_EN_24HS = 24 * 60 * 60 * 1000;
-    return diff >= MILISEGUNDOS_EN_24HS;
+    return turnoDateTime.getTime() - now.getTime() >= 86400000;
   };
 
   const turnosValidos = misTurnos.filter((t) => t.fecha && t.hora);
-
   const upcomingTurnos = turnosValidos.filter((turno) =>
     isUpcoming(turno.fecha, turno.hora)
   );
@@ -91,20 +119,40 @@ export default function MisTurnosPage() {
     (turno) => !isUpcoming(turno.fecha, turno.hora)
   );
 
-  // Renderizado condicional de la tarjeta según el rol
-  const renderTurnoCard = (turno, statusClass, statusText) => {
-    // Si soy paciente, busco info del médico
-    const profesional = getProfessionalById(turno.profesionalId);
+  const renderStaticStars = (score) => {
+    return (
+      <div className="stars-display">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`star-icon-card ${
+              star <= Math.round(score) ? "filled" : "empty"
+            }`}
+          >
+            {star <= Math.round(score) ? <FaStar /> : <FaRegStar />}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
-    // Si soy médico, uso la info del paciente que viene en el turno
+  const renderTurnoCard = (turno, statusClass, statusText) => {
+    const profesional = getProfessionalById(turno.profesionalId);
     const pacienteNombre = turno.usuario?.nombre || "Paciente";
     const pacienteEmail = turno.usuario?.email || "";
 
+    const promedioMedico =
+      !isMedico && profesional
+        ? obtenerPromedio(profesional.id || profesional._id)
+        : 0;
+
+    const turnoId = turno._id || turno.id;
+    const isRated = hasRatedTurno(turnoId);
+
     return (
-      <div key={turno._id || turno.id} className={`turno-card ${statusClass}`}>
+      <div key={turnoId} className={`turno-card ${statusClass}`}>
         <div className="turno-header">
           <div className="profesional-info">
-            {/* AVATAR: Diferente si es médico o paciente */}
             <img
               src={!isMedico ? profesional?.avatar : null}
               alt={!isMedico ? profesional?.nombre : pacienteNombre}
@@ -117,7 +165,6 @@ export default function MisTurnosPage() {
               }}
             />
             <div>
-              {/* NOMBRE Y SUBTITULO */}
               <h4>
                 {!isMedico
                   ? profesional?.nombre || "Profesional"
@@ -134,6 +181,8 @@ export default function MisTurnosPage() {
                   </>
                 )}
               </p>
+
+              {!isMedico && renderStaticStars(promedioMedico)}
             </div>
           </div>
           <div
@@ -147,38 +196,77 @@ export default function MisTurnosPage() {
 
         <div className="turno-details">
           <div className="detail">
-            <FaCalendarAlt />
-            <span>{formatDate(turno.fecha)}</span>
+            <FaCalendarAlt /> <span>{formatDate(turno.fecha)}</span>
           </div>
           <div className="detail">
-            <FaClock />
-            <span>{formatTime(turno.hora)}</span>
+            <FaClock /> <span>{formatTime(turno.hora)}</span>
           </div>
         </div>
 
-        {/* Solo mostramos botón cancelar en turnos futuros */}
-        {statusClass === "upcoming" && (
-          <div className="turno-actions">
-            <button
-              className={`btn-cancel ${
-                !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
-              }`}
-              onClick={() => {
-                if (canCancelLocal(turno.fecha, turno.hora)) {
-                  setShowCancelConfirm(turno._id || turno.id);
+        <div className="turno-actions">
+          {statusClass === "upcoming" && (
+            <>
+              <button
+                className={`btn-modify ${
+                  !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
+                }`}
+                onClick={() => {
+                  if (canCancelLocal(turno.fecha, turno.hora))
+                    setShowModifyConfirm(turno);
+                }}
+                disabled={!canCancelLocal(turno.fecha, turno.hora)}
+                title={
+                  canCancelLocal(turno.fecha, turno.hora)
+                    ? "Modificar fecha del turno"
+                    : "Este turno no se puede modificar porque faltan menos de 24 horas"
                 }
-              }}
-              disabled={!canCancelLocal(turno.fecha, turno.hora)}
-              title={
-                canCancelLocal(turno.fecha, turno.hora)
-                  ? "Cancelar turno"
-                  : "Menos de 24hs para el turno"
-              }
-            >
-              <FaTrash /> Cancelar
-            </button>
-          </div>
-        )}
+              >
+                <FaEdit /> Modificar
+              </button>
+
+              <button
+                className={`btn-cancel ${
+                  !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
+                }`}
+                onClick={() => {
+                  if (canCancelLocal(turno.fecha, turno.hora))
+                    setShowCancelConfirm(turno._id || turno.id);
+                }}
+                disabled={!canCancelLocal(turno.fecha, turno.hora)}
+                title={
+                  canCancelLocal(turno.fecha, turno.hora)
+                    ? "Cancelar turno"
+                    : "Este turno no se puede cancelar porque faltan menos de 24 horas"
+                }
+              >
+                <FaTrash /> Cancelar
+              </button>
+            </>
+          )}
+
+          {statusClass === "past" && !isMedico && (
+            <>
+              {!isRated ? (
+                <button
+                  className="btn-primary"
+                  onClick={() =>
+                    setRateModal({
+                      id: turnoId,
+                      profesionalId: turno.profesionalId,
+                      nombre: profesional?.nombre,
+                    })
+                  }
+                >
+                  <FaStar /> CALIFICA ESTE TURNO
+                </button>
+              ) : (
+                <div className="already-rated-badge">
+                  <FaCheckCircle /> Ya calificaste
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     );
   };
@@ -214,15 +302,6 @@ export default function MisTurnosPage() {
         </div>
       ) : (
         <>
-          {turnosValidos.length === 0 && (
-            <div
-              className="error-message"
-              style={{ textAlign: "center", marginTop: "20px" }}
-            >
-              <p>Se encontraron reservas, pero faltan datos de fecha/hora.</p>
-            </div>
-          )}
-
           {upcomingTurnos.length > 0 && (
             <div className="turnos-section">
               <h2>{isMedico ? "Próximos Pacientes" : "Próximos Turnos"}</h2>
@@ -233,7 +312,6 @@ export default function MisTurnosPage() {
               </div>
             </div>
           )}
-
           {pastTurnos.length > 0 && (
             <div className="turnos-section">
               <h2>Historial</h2>
@@ -251,9 +329,7 @@ export default function MisTurnosPage() {
         <div className="modal-overlay">
           <div className="modal">
             <h3>¿Cancelar turno?</h3>
-            <p>
-              Esta acción no se puede deshacer. El horario quedará disponible.
-            </p>
+            <p>Esta acción no se puede deshacer.</p>
             <div className="modal-actions">
               <button
                 className="btn-secondary"
@@ -266,6 +342,77 @@ export default function MisTurnosPage() {
                 onClick={() => handleCancelTurno(showCancelConfirm)}
               >
                 Sí, cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModifyConfirm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>¿Modificar turno?</h3>
+            <p>
+              Para modificar el turno, el actual debe ser cancelado y serás
+              redirigido para elegir una nueva fecha.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowModifyConfirm(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => handleModifyTurno(showModifyConfirm)}
+              >
+                Sí, reprogramar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rateModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Calificar Atención</h3>
+            <p>
+              ¿Qué te pareció la atención de <strong>{rateModal.nombre}</strong>
+              ?
+            </p>
+            <div className="modal-stars-container">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={`modal-star ${
+                    star <= (hoverScore || ratingScore) ? "filled" : "empty"
+                  }`}
+                  onMouseEnter={() => setHoverScore(star)}
+                  onMouseLeave={() => setHoverScore(0)}
+                  onClick={() => setRatingScore(star)}
+                >
+                  <FaStar />
+                </span>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setRateModal(null);
+                  setRatingScore(0);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleRateSubmit}
+                disabled={ratingScore === 0}
+              >
+                Enviar Opinión
               </button>
             </div>
           </div>
