@@ -36,13 +36,10 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const { currentUser } = useAuth(); // si AuthProvider envuelve a UserProvider
+  const { currentUser } = useAuth();
   useEffect(() => {
     if (currentUser?.id) {
       fetchUser(currentUser.id);
-    } else {
-      const token = getToken();
-      // opcional: decodificar token para obtener userId y fetchUser(userId)
     }
   }, [currentUser]);
 

@@ -71,7 +71,7 @@ const UserProfile = () => {
           )}
         </div>
         <div className="profile-info">
-          <h1>{formData.name} {formData.apellido}</h1>
+          <h1>{formData.username}</h1>
           <p className="profile-email">{formData.email}</p>
         </div>
         <button

@@ -38,7 +38,7 @@ const CurrentUser = ({ currentUser, logout, avatar }) => {
         >
           <div className="dropdown-item">
             <FaUserCog className="icon" />
-            <Link href={`/user/${currentUser.id}`} className="dropdown-item">Mi perfil</Link>
+            <Link onClick={() => setDropdownOpen(!dropdownOpen)} href={`/user/${currentUser.id}`} className="dropdown-item">Mi perfil</Link>
           </div>
           <div className="dropdown-item">
             {currentUser.email}
