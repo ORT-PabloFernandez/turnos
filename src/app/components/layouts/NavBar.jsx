@@ -1,15 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import './navbar.css';
+import { useState } from "react";
+import "./navbar.css";
 
-// Importar los componentes modulares
-import Logo from './Logo';
-import Menu from './Menu';
-import Notifications from './Notifications';
-import CurrentUser from './CurrentUser';
-import AuthButtons from './AuthButtons';
-import { useAuth } from '@/app/context/AuthContext';
+import Logo from "./Logo";
+import Menu from "./Menu";
+import Notifications from "./Notifications";
+import CurrentUser from "./CurrentUser";
+import AuthButtons from "./AuthButtons";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function Navbar() {
   const { currentUser, logout, loading } = useAuth();

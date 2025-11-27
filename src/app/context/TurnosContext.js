@@ -13,7 +13,6 @@ export const useTurnos = () => {
   return context;
 };
 
-// Helper mejorado para obtener ID de forma robusta
 const getUserIdFromCurrentUser = (user) => {
   if (!user) return null;
   if (user.id) return user.id;
@@ -31,11 +30,9 @@ export const TurnosProvider = ({ children }) => {
   const [turnosReservados, setTurnosReservados] = useState([]);
   const { currentUser, token } = useAuth();
 
-  // --- LÓGICA DE NOTIFICACIONES ---
   const [notifications, setNotifications] = useState([]);
-  const [isLoaded, setIsLoaded] = useState(false); // Estado para controlar la carga inicial
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // 1. CARGAR: Leemos del localStorage al montar
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("turnosApp_notifications");
@@ -50,8 +47,6 @@ export const TurnosProvider = ({ children }) => {
     }
   }, []);
 
-  // 2. GUARDAR: Escribimos en localStorage SOLAMENTE si ya cargamos previamente
-  // Esto evita sobrescribir las notificaciones con un array vacío al iniciar
   useEffect(() => {
     if (typeof window !== "undefined" && isLoaded) {
       localStorage.setItem(
@@ -77,14 +72,12 @@ export const TurnosProvider = ({ children }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  // --- FUNCIÓN PARA MARCAR UNA NOTIFICACIÓN INDIVIDUAL ---
   const markNotificationAsRead = (id) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
-  // --- CARGA DE DATOS ---
   const cargarProfesionales = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/profesionales");
@@ -119,7 +112,6 @@ export const TurnosProvider = ({ children }) => {
     if (!userId) return;
 
     try {
-      // Filtro inteligente según rol
       const paramKey = isDoctor ? "profesionalId" : "usuarioId";
       const url = `http://localhost:3000/api/turnos?${paramKey}=${userId}`;
 
@@ -155,7 +147,6 @@ export const TurnosProvider = ({ children }) => {
     cargarTurnosUsuario();
   }, [currentUser, token]);
 
-  // --- FUNCIONES DE FILTRADO ---
   const obtenerHorariosDisponiblesPorProfesional = (
     profesionalId,
     fecha = null
@@ -175,7 +166,6 @@ export const TurnosProvider = ({ children }) => {
     return turnosReservados;
   };
 
-  // --- RESERVAR TURNO ---
   const reservarTurno = async (horarioId) => {
     try {
       if (!currentUser) {
@@ -215,7 +205,6 @@ export const TurnosProvider = ({ children }) => {
         return false;
       }
 
-      // Si es médico, no notificamos éxito (asumimos gestión propia)
       const isDoctor =
         currentUser.rol === "medico" ||
         currentUser.role === "doctor" ||
@@ -242,7 +231,6 @@ export const TurnosProvider = ({ children }) => {
     }
   };
 
-  // --- CANCELAR TURNO ---
   const cancelarTurno = async (turnoId) => {
     try {
       const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
@@ -262,7 +250,6 @@ export const TurnosProvider = ({ children }) => {
         return false;
       }
 
-      // ÉXITO: Notificamos siempre
       addNotification({
         type: "info",
         title: "Turno Cancelado",
@@ -290,10 +277,10 @@ export const TurnosProvider = ({ children }) => {
     obtenerHorariosDisponiblesPorProfesional,
     obtenerTurnosPorProfesional,
     obtenerTurnosUsuario,
-    // EXPORTAMOS LA LÓGICA DE NOTIFICACIONES
+
     notifications,
     markAllNotificationsAsRead,
-    markNotificationAsRead, // <--- AHORA SÍ ESTÁ EXPORTADA
+    markNotificationAsRead,
     addNotification,
   };
 
