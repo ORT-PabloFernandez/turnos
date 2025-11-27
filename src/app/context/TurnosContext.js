@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 //import { toAMD } from "./Date";
 
 const TurnosContext = createContext(null);
@@ -18,9 +18,9 @@ export const useTurnos = () => {
 const getUserIdFromCurrentUser = (user) => {
   if (!user) return null;
 
-  if (user.id) return user.id;                         // por si en algún momento tiene id
-  if (user._id?.$oid) return user._id.$oid;           // formato típico de Mongo en JSON
-  if (typeof user._id === "string") return user._id;  // por si ya viene como string
+  if (user.id) return user.id; // por si en algún momento tiene id
+  if (user._id?.$oid) return user._id.$oid; // formato típico de Mongo en JSON
+  if (typeof user._id === "string") return user._id; // por si ya viene como string
 
   return null;
 };
@@ -37,7 +37,19 @@ export const TurnosProvider = ({ children }) => {
   // Usuario actual (arreglado)
   const { currentUser, token } = useAuth();
 
+  const [specialties, setSpecialties] = useState([]);
+
   console.log("TOKEN ENVIADO:", token);
+
+  const fetchSpecialties = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/especialidades");
+        const data = await res.json();
+        setSpecialties(data);
+      } catch (err) {
+        console.error("Error loading specialties:", err);
+      }
+    };
 
   //fetch para traer todos los profesionales
   const cargarProfesionales = async () => {
@@ -71,7 +83,6 @@ export const TurnosProvider = ({ children }) => {
     }
     const userId = getUserIdFromCurrentUser(currentUser);
 
-
     try {
       const response = await fetch(
         `http://localhost:3000/api/turnos?usuarioId=${userId}`
@@ -89,6 +100,7 @@ export const TurnosProvider = ({ children }) => {
   useEffect(() => {
     cargarProfesionales();
     cargarHorarios();
+    fetchSpecialties();
   }, []);
 
   useEffect(() => {
@@ -97,7 +109,7 @@ export const TurnosProvider = ({ children }) => {
 
   // Funciones de consulta
 
-const obtenerHorariosDisponiblesPorProfesional = (
+  const obtenerHorariosDisponiblesPorProfesional = (
     profesionalId,
     fecha = null
   ) => {
@@ -123,28 +135,11 @@ const obtenerHorariosDisponiblesPorProfesional = (
         console.warn("Debe estar logueado para reservar turno");
         return false;
       }
-       const userId = getUserIdFromCurrentUser(currentUser);
+      const userId = getUserIdFromCurrentUser(currentUser);
 
-    console.log(">>> Enviando al backend:", {
-      horarioId,
-      usuario: {
-        id: userId,
-        nombre:
-          currentUser.nombre ||
-          currentUser.name ||
-          currentUser.username ||
-          "Paciente",
-        email: currentUser.email,
-      },
-    });
-      const res = await fetch("http://localhost:3000/api/turnos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-  },
-        body: JSON.stringify({
-          horarioId,
-          usuario: {
+      console.log(">>> Enviando al backend:", {
+        horarioId,
+        usuario: {
           id: userId,
           nombre:
             currentUser.nombre ||
@@ -153,17 +148,35 @@ const obtenerHorariosDisponiblesPorProfesional = (
             "Paciente",
           email: currentUser.email,
         },
+      });
+      const res = await fetch("http://localhost:3000/api/turnos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          horarioId,
+          usuario: {
+            id: userId,
+            nombre:
+              currentUser.nombre ||
+              currentUser.name ||
+              currentUser.username ||
+              "Paciente",
+            email: currentUser.email,
+          },
         }),
       });
 
       if (!res.ok) {
-      let errorData = {};
-      try {
-        errorData = await res.json();
-      } catch (e) {}
-      console.error("Error al crear turno:", res.status, errorData);
-      return false;
-    }
+        let errorData = {};
+        try {
+          errorData = await res.json();
+        } catch (e) {}
+        console.error("Error al crear turno:", res.status, errorData);
+        return false;
+      }
 
       // Actualizar frontend
       await cargarHorarios();
@@ -179,36 +192,35 @@ const obtenerHorariosDisponiblesPorProfesional = (
   // Cancelar turno
 
   const cancelarTurno = async (turnoId) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    let data = {};
     try {
-      data = await res.json();
-    } catch (e) {
-    }
+      const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!res.ok) {
-      console.error("Error al cancelar el turno:", res.status, data);
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (e) {}
+
+      if (!res.ok) {
+        console.error("Error al cancelar el turno:", res.status, data);
+        return false;
+      }
+
+      // Actualizar frontend
+      await cargarHorarios();
+      await cargarTurnosUsuario();
+
+      return true;
+    } catch (err) {
+      console.error("Error de red al cancelar turno:", err);
       return false;
     }
-
-    // Actualizar frontend
-    await cargarHorarios();
-    await cargarTurnosUsuario();
-
-    return true;
-  } catch (err) {
-    console.error("Error de red al cancelar turno:", err);
-    return false;
-  }
-};
+  };
 
   const value = {
     profesionales,
@@ -222,6 +234,8 @@ const obtenerHorariosDisponiblesPorProfesional = (
     obtenerHorariosDisponiblesPorProfesional,
     obtenerTurnosPorProfesional,
     obtenerTurnosUsuario,
+    fetchSpecialties,
+    specialties
   };
 
   return (

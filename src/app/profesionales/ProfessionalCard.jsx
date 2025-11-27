@@ -4,9 +4,12 @@ import Link from 'next/link';
 import { FaUserMd, FaCalendarAlt, FaEnvelope } from 'react-icons/fa';
 import { useTurnos } from '../context/TurnosContext';
 import './profesionales.css';
+import { useAuth } from "../context/AuthContext";
 
 export default function ProfessionalCard({ profesional }) {
   const { obtenerHorariosDisponiblesPorProfesional, obtenerTurnosPorProfesional } = useTurnos();
+
+  const { currentUser } = useAuth();
   
   const horariosDisponibles = obtenerHorariosDisponiblesPorProfesional(profesional.id);
   const turnosReservados = obtenerTurnosPorProfesional(profesional.id);
@@ -44,11 +47,15 @@ export default function ProfessionalCard({ profesional }) {
         </div>
       </div>
 
-      <div className="professional-actions">
+      {currentUser && 
+      (
+        <div className="professional-actions">
         <Link href={`/turnos?profesional=${profesional.id}`} className="btn-primary">
           <FaCalendarAlt /> Ver Horarios
         </Link>
       </div>
-    </div>
+    
+      )}
+      </div>
   );
 }
