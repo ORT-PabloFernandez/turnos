@@ -6,8 +6,13 @@ import {
   FaClock,
   FaCalendarCheck,
 } from "react-icons/fa";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function Home() {
+
+  const { currentUser } = useAuth();
+
+
   const features = [
     {
       title: "Profesionales",
@@ -16,14 +21,14 @@ export default function Home() {
       href: "/profesionales",
       color: "#3b82f6",
     },
-    {
+    currentUser && {
       title: "Reservar Turno",
       description: "Encuentra y reserva turnos disponibles",
       icon: <FaCalendarAlt size={48} />,
       href: "/turnos",
       color: "#10b981",
     },
-    {
+    currentUser && {
       title: "Mis Turnos",
       description: "Consulta tus turnos reservados",
       icon: <FaCalendarCheck size={48} />,
@@ -37,7 +42,7 @@ export default function Home() {
       href: "/horarios",
       color: "#ef4444",
     },
-  ];
+  ].filter(Boolean); // Filtra las características nulas si el usuario no está autenticado
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
