@@ -1,8 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-//import { toAMD } from "./Date";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 const TurnosContext = createContext(null);
 
@@ -14,77 +13,138 @@ export const useTurnos = () => {
   return context;
 };
 
-// Saca un id de usuario "usable" desde currentUser
+// Helper mejorado para obtener ID de forma robusta
 const getUserIdFromCurrentUser = (user) => {
   if (!user) return null;
-
-  if (user.id) return user.id;                         // por si en algún momento tiene id
-  if (user._id?.$oid) return user._id.$oid;           // formato típico de Mongo en JSON
-  if (typeof user._id === "string") return user._id;  // por si ya viene como string
-
+  if (user.id) return user.id;
+  if (user._id) {
+    if (typeof user._id === "string") return user._id;
+    if (user._id.$oid) return user._id.$oid;
+  }
+  if (user.uid) return user.uid;
   return null;
 };
 
 export const TurnosProvider = ({ children }) => {
   const [profesionales, setProfesionales] = useState([]);
-
-  // Horarios disponibles
   const [horarios, setHorarios] = useState([]);
-
-  // Turnos reservados
   const [turnosReservados, setTurnosReservados] = useState([]);
-
-  // Usuario actual (arreglado)
   const { currentUser, token } = useAuth();
 
-  console.log("TOKEN ENVIADO:", token);
+  // --- LÓGICA DE NOTIFICACIONES ---
+  const [notifications, setNotifications] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false); // Estado para controlar la carga inicial
 
-  //fetch para traer todos los profesionales
+  // 1. CARGAR: Leemos del localStorage al montar
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("turnosApp_notifications");
+      if (saved) {
+        try {
+          setNotifications(JSON.parse(saved));
+        } catch (error) {
+          console.error("Error al cargar notificaciones:", error);
+        }
+      }
+      setIsLoaded(true); // Marcamos que ya terminamos de cargar
+    }
+  }, []);
+
+  // 2. GUARDAR: Escribimos en localStorage SOLAMENTE si ya cargamos previamente
+  // Esto evita sobrescribir las notificaciones con un array vacío al iniciar
+  useEffect(() => {
+    if (typeof window !== "undefined" && isLoaded) {
+      localStorage.setItem(
+        "turnosApp_notifications",
+        JSON.stringify(notifications)
+      );
+    }
+  }, [notifications, isLoaded]);
+
+  const addNotification = ({ type, title, message }) => {
+    const newNotif = {
+      id: Date.now(), // ID único basado en tiempo
+      read: false,
+      date: new Date(),
+      type, // 'success', 'error', 'info'
+      title,
+      message,
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  // --- FUNCIÓN PARA MARCAR UNA NOTIFICACIÓN INDIVIDUAL ---
+  const markNotificationAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  // --- CARGA DE DATOS ---
   const cargarProfesionales = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/profesionales");
       const data = await response.json();
-      console.log("Profesionales:", data);
       setProfesionales(data);
     } catch (error) {
       console.log("Error cargando profesionales:", error);
     }
   };
 
-  // Cargar horarios desde el backend
   const cargarHorarios = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/horarios");
       const data = await response.json();
-      console.log("Horarios:", data);
       setHorarios(data);
     } catch (error) {
       console.log("Error cargando horarios:", error);
     }
   };
 
-  // Cargar turnos del usuario desde el backend
   const cargarTurnosUsuario = async () => {
     if (!currentUser) {
       setTurnosReservados([]);
       return;
     }
     const userId = getUserIdFromCurrentUser(currentUser);
+    const isDoctor =
+      currentUser.rol === "medico" ||
+      currentUser.role === "doctor" ||
+      currentUser.rol === "profesional";
 
+    if (!userId) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/turnos?usuarioId=${userId}`
-      );
+      // Filtro inteligente según rol
+      const paramKey = isDoctor ? "profesionalId" : "usuarioId";
+      const url = `http://localhost:3000/api/turnos?${paramKey}=${userId}`;
+
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        setTurnosReservados([]);
+        return;
+      }
+
       const data = await response.json();
-      console.log("Turnos usuario:", data);
-      setTurnosReservados(data);
+      if (Array.isArray(data)) {
+        setTurnosReservados(data);
+      } else {
+        setTurnosReservados([]);
+      }
     } catch (error) {
       console.log("Error cargando turnos del usuario:", error);
     }
   };
-
-  // useEffect de carga inicial
 
   useEffect(() => {
     cargarProfesionales();
@@ -93,11 +153,10 @@ export const TurnosProvider = ({ children }) => {
 
   useEffect(() => {
     cargarTurnosUsuario();
-  }, [currentUser]);
+  }, [currentUser, token]);
 
-  // Funciones de consulta
-
-const obtenerHorariosDisponiblesPorProfesional = (
+  // --- FUNCIONES DE FILTRADO ---
+  const obtenerHorariosDisponiblesPorProfesional = (
     profesionalId,
     fecha = null
   ) => {
@@ -112,119 +171,112 @@ const obtenerHorariosDisponiblesPorProfesional = (
     return turnosReservados.filter((t) => t.profesionalId === profesionalId);
   };
 
-  // TODO: Descomentar cuando tengamos el user de la sesion
-  /*const obtenerTurnosUsuario = async function fetchTurnos(){
-    try {
-      const response = await fetch('http://localhost:3000/api/turnos/usuario/1');
-      const data = await response.json();
-      console.log(data)
-      setTurnosReservados(data)
-    } catch (error){
-      console.log(error)
-    }
-  }
-
-  useEffect(() => {
-    obtenerTurnosUsuario(); 
-  }, [])*/
-
   const obtenerTurnosUsuario = () => {
     return turnosReservados;
   };
 
-  //Reservar turno
+  // --- RESERVAR TURNO ---
   const reservarTurno = async (horarioId) => {
     try {
       if (!currentUser) {
-        console.warn("Debe estar logueado para reservar turno");
+        addNotification({
+          type: "error",
+          title: "Error",
+          message: "Debes iniciar sesión.",
+        });
         return false;
       }
-       const userId = getUserIdFromCurrentUser(currentUser);
+      const userId = getUserIdFromCurrentUser(currentUser);
 
-    console.log(">>> Enviando al backend:", {
-      horarioId,
-      usuario: {
-        id: userId,
-        nombre:
-          currentUser.nombre ||
-          currentUser.name ||
-          currentUser.username ||
-          "Paciente",
-        email: currentUser.email,
-      },
-    });
       const res = await fetch("http://localhost:3000/api/turnos", {
         method: "POST",
-        headers: { "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-  },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           horarioId,
           usuario: {
-          id: userId,
-          nombre:
-            currentUser.nombre ||
-            currentUser.name ||
-            currentUser.username ||
-            "Paciente",
-          email: currentUser.email,
-        },
+            id: userId,
+            nombre: currentUser.nombre || currentUser.name || "Paciente",
+            email: currentUser.email,
+          },
         }),
       });
 
       if (!res.ok) {
-      let errorData = {};
-      try {
-        errorData = await res.json();
-      } catch (e) {}
-      console.error("Error al crear turno:", res.status, errorData);
-      return false;
-    }
+        let errorMsg = "No se pudo reservar.";
+        try {
+          const errData = await res.json();
+          errorMsg = errData.message || errorMsg;
+        } catch (e) {}
 
-      // Actualizar frontend
+        addNotification({ type: "error", title: "Error", message: errorMsg });
+        return false;
+      }
+
+      // Si es médico, no notificamos éxito (asumimos gestión propia)
+      const isDoctor =
+        currentUser.rol === "medico" ||
+        currentUser.role === "doctor" ||
+        currentUser.rol === "profesional";
+
+      if (!isDoctor) {
+        addNotification({
+          type: "success",
+          title: "¡Turno Reservado!",
+          message: "Tu cita ha sido confirmada con éxito.",
+        });
+      }
+
       await cargarHorarios();
       await cargarTurnosUsuario();
-
       return true;
     } catch (error) {
-      console.error("Error reservando turno:", error);
+      addNotification({
+        type: "error",
+        title: "Error de red",
+        message: "Intenta nuevamente.",
+      });
       return false;
     }
   };
 
-  // Cancelar turno
-
+  // --- CANCELAR TURNO ---
   const cancelarTurno = async (turnoId) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    let data = {};
     try {
-      data = await res.json();
-    } catch (e) {
-    }
+      const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!res.ok) {
-      console.error("Error al cancelar el turno:", res.status, data);
+      if (!res.ok) {
+        addNotification({
+          type: "error",
+          title: "Error",
+          message: "No se pudo cancelar el turno.",
+        });
+        return false;
+      }
+
+      // ÉXITO: Notificamos siempre
+      addNotification({
+        type: "info",
+        title: "Turno Cancelado",
+        message: "Has cancelado tu turno correctamente.",
+      });
+
+      await cargarHorarios();
+      await cargarTurnosUsuario();
+      return true;
+    } catch (err) {
+      console.error(err);
       return false;
     }
-
-    // Actualizar frontend
-    await cargarHorarios();
-    await cargarTurnosUsuario();
-
-    return true;
-  } catch (err) {
-    console.error("Error de red al cancelar turno:", err);
-    return false;
-  }
-};
+  };
 
   const value = {
     profesionales,
@@ -238,6 +290,11 @@ const obtenerHorariosDisponiblesPorProfesional = (
     obtenerHorariosDisponiblesPorProfesional,
     obtenerTurnosPorProfesional,
     obtenerTurnosUsuario,
+    // EXPORTAMOS LA LÓGICA DE NOTIFICACIONES
+    notifications,
+    markAllNotificationsAsRead,
+    markNotificationAsRead, // <--- AHORA SÍ ESTÁ EXPORTADA
+    addNotification,
   };
 
   return (
