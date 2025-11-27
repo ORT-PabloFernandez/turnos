@@ -7,17 +7,15 @@ import {
   FaInfoCircle,
   FaExclamationCircle,
 } from "react-icons/fa";
-// CORREGIDO: El archivo real es 'TurnosContext.js' (con mayúsculas), no 'turnos-context'
+
 import { useTurnos } from "@/app/context/TurnosContext";
 import "./navbar.css";
 
 const Notifications = () => {
-  // 1. IMPORTANTE: Traemos la función para marcar una sola como leída
   const { notifications, markAllNotificationsAsRead, markNotificationAsRead } =
     useTurnos();
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Filtramos las no leídas
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleMouseEnter = () => {
@@ -32,12 +30,10 @@ const Notifications = () => {
     markAllNotificationsAsRead();
   };
 
-  // 2. NUEVA FUNCIÓN: Maneja el click en una notificación individual
   const handleNotificationClick = (id) => {
     markNotificationAsRead(id);
   };
 
-  // Icono según el tipo de notificación
   const getIcon = (type) => {
     switch (type) {
       case "success":
@@ -58,10 +54,8 @@ const Notifications = () => {
     >
       <FaBell className="notificationIcon" />
 
-      {/* Badge rojo solo si hay no leídas */}
       {unreadCount > 0 && <span className="notificationIndicator"></span>}
 
-      {/* Menú Desplegable */}
       {showDropdown && (
         <div className="dropdownMenu notifications-dropdown-width">
           <div className="notifications-header">
@@ -80,12 +74,10 @@ const Notifications = () => {
               notifications.map((notif) => (
                 <div
                   key={notif.id}
-                  // 3. AQUÍ ESTÁ LA MAGIA: El evento onClick en el ítem
                   onClick={() => handleNotificationClick(notif.id)}
                   className={`notification-item ${
                     !notif.read ? "bg-unread" : ""
                   }`}
-                  // Agregamos cursor pointer y title para mejorar la UX
                   style={{ cursor: "pointer" }}
                   title="Haz click para marcar como leída"
                 >
@@ -101,7 +93,6 @@ const Notifications = () => {
                     </span>
                   </div>
 
-                  {/* Opcional: Un puntito visual extra para las no leídas */}
                   {!notif.read && (
                     <div
                       style={{

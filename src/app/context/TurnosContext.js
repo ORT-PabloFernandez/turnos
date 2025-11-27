@@ -59,7 +59,6 @@ const fetchSpecialties = async () => {
       }
     };
 
-  // 1. CARGAR: Leemos del localStorage al montar
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("turnosApp_notifications");
@@ -74,8 +73,6 @@ const fetchSpecialties = async () => {
     }
   }, []);
 
-  // 2. GUARDAR: Escribimos en localStorage SOLAMENTE si ya cargamos previamente
-  // Esto evita sobrescribir las notificaciones con un array vacío al iniciar
   useEffect(() => {
     if (typeof window !== "undefined" && isLoaded) {
       localStorage.setItem(
@@ -101,14 +98,12 @@ const fetchSpecialties = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  // --- FUNCIÓN PARA MARCAR UNA NOTIFICACIÓN INDIVIDUAL ---
   const markNotificationAsRead = (id) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
-  // --- CARGA DE DATOS ---
   const cargarProfesionales = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/profesionales");
@@ -401,6 +396,7 @@ const obtenerPromedio = (profesionalId) => {
     obtenerTurnosUsuario,
     fetchSpecialties,
     specialties,
+
     notifications,
     markAllNotificationsAsRead,
     markNotificationAsRead,
