@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+// CORRECCIÓN: Rutas relativas correctas (subimos un nivel con ..)
 import { useTurnos } from "../context/TurnosContext";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -57,7 +58,9 @@ export default function MisTurnosPage() {
     return turno;
   });
 
-  const formatTime = (timeString) => timeString;
+  const formatTime = (timeString) => {
+    return timeString;
+  };
 
   const getProfessionalById = (id) => {
     return profesionales.find(
@@ -93,10 +96,13 @@ export default function MisTurnosPage() {
     if (!fecha || !hora) return false;
     const turnoDateTime = parseDateTimeLocal(fecha, hora);
     const now = new Date();
-    return turnoDateTime.getTime() - now.getTime() >= 86400000;
+    const diff = turnoDateTime.getTime() - now.getTime();
+    const MILISEGUNDOS_EN_24HS = 24 * 60 * 60 * 1000;
+    return diff >= MILISEGUNDOS_EN_24HS;
   };
 
   const turnosValidos = misTurnos.filter((t) => t.fecha && t.hora);
+
   const upcomingTurnos = turnosValidos.filter((turno) =>
     isUpcoming(turno.fecha, turno.hora)
   );
@@ -150,6 +156,7 @@ export default function MisTurnosPage() {
               }}
             />
             <div>
+              {/* NOMBRE Y SUBTITULO */}
               <h4>
                 {!isMedico
                   ? profesional?.nombre || "Profesional"
@@ -264,6 +271,15 @@ export default function MisTurnosPage() {
         </div>
       ) : (
         <>
+          {turnosValidos.length === 0 && (
+            <div
+              className="error-message"
+              style={{ textAlign: "center", marginTop: "20px" }}
+            >
+              <p>Se encontraron reservas, pero faltan datos de fecha/hora.</p>
+            </div>
+          )}
+
           {upcomingTurnos.length > 0 && (
             <div className="turnos-section">
               <h2>{isMedico ? "Próximos Pacientes" : "Próximos Turnos"}</h2>
@@ -291,7 +307,9 @@ export default function MisTurnosPage() {
         <div className="modal-overlay">
           <div className="modal">
             <h3>¿Cancelar turno?</h3>
-            <p>Esta acción no se puede deshacer.</p>
+            <p>
+              Esta acción no se puede deshacer. El horario quedará disponible.
+            </p>
             <div className="modal-actions">
               <button
                 className="btn-secondary"

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 
+
 const TurnosContext = createContext(null);
 
 export const useTurnos = () => {
@@ -30,16 +31,25 @@ const getUserIdFromCurrentUser = (user) => {
 };
 
 export const TurnosProvider = ({ children }) => {
-  const [profesionales, setProfesionales] = useState([]);
+
+
+const [profesionales, setProfesionales] = useState([]);
   const [horarios, setHorarios] = useState([]);
   const [turnosReservados, setTurnosReservados] = useState([]);
   const { currentUser, token } = useAuth();
 
+  const [notifications, setNotifications] = useState([]);
+  const [ratings, setRatings] = useState({});
+  const [ratedTurnos, setRatedTurnos] = useState([]);
+  const [remindedTurnos, setRemindedTurnos] = useState([]);
+
+  const [turnoParaModificar, setTurnoParaModificar] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const [specialties, setSpecialties] = useState([]);
 
-  console.log("TOKEN ENVIADO:", token);
 
-  const fetchSpecialties = async () => {
+const fetchSpecialties = async () => {
       try {
         const res = await fetch("http://localhost:3000/api/especialidades");
         const data = await res.json();
@@ -49,37 +59,23 @@ export const TurnosProvider = ({ children }) => {
       }
     };
 
-  //fetch para traer todos los profesionales
-  const [notifications, setNotifications] = useState([]);
-  const [ratings, setRatings] = useState({});
-  const [ratedTurnos, setRatedTurnos] = useState([]);
-
-  const [isLoaded, setIsLoaded] = useState(false);
-
+  // 1. CARGAR: Leemos del localStorage al montar
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedNotifs = localStorage.getItem("turnosApp_notifications");
-      if (savedNotifs)
+      const saved = localStorage.getItem("turnosApp_notifications");
+      if (saved) {
         try {
-          setNotifications(JSON.parse(savedNotifs));
-        } catch (e) {}
-
-      const savedRatings = localStorage.getItem("turnosApp_ratings");
-      if (savedRatings)
-        try {
-          setRatings(JSON.parse(savedRatings));
-        } catch (e) {}
-
-      const savedRatedTurnos = localStorage.getItem("turnosApp_ratedTurnos");
-      if (savedRatedTurnos)
-        try {
-          setRatedTurnos(JSON.parse(savedRatedTurnos));
-        } catch (e) {}
-
-      setIsLoaded(true);
+          setNotifications(JSON.parse(saved));
+        } catch (error) {
+          console.error("Error al cargar notificaciones:", error);
+        }
+      }
+      setIsLoaded(true); // Marcamos que ya terminamos de cargar
     }
   }, []);
 
+  // 2. GUARDAR: Escribimos en localStorage SOLAMENTE si ya cargamos previamente
+  // Esto evita sobrescribir las notificaciones con un array vacío al iniciar
   useEffect(() => {
     if (typeof window !== "undefined" && isLoaded) {
       localStorage.setItem(
@@ -89,27 +85,12 @@ export const TurnosProvider = ({ children }) => {
     }
   }, [notifications, isLoaded]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && isLoaded) {
-      localStorage.setItem("turnosApp_ratings", JSON.stringify(ratings));
-    }
-  }, [ratings, isLoaded]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && isLoaded) {
-      localStorage.setItem(
-        "turnosApp_ratedTurnos",
-        JSON.stringify(ratedTurnos)
-      );
-    }
-  }, [ratedTurnos, isLoaded]);
-
   const addNotification = ({ type, title, message }) => {
     const newNotif = {
-      id: Date.now(),
+      id: Date.now(), // ID único basado en tiempo
       read: false,
       date: new Date(),
-      type,
+      type, // 'success', 'error', 'info'
       title,
       message,
     };
@@ -120,54 +101,14 @@ export const TurnosProvider = ({ children }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  // --- FUNCIÓN PARA MARCAR UNA NOTIFICACIÓN INDIVIDUAL ---
   const markNotificationAsRead = (id) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
-  const calificarProfesional = (profesionalId, puntaje, turnoId) => {
-    if (ratedTurnos.includes(turnoId)) return;
-
-    setRatings((prev) => {
-      const idStr = String(profesionalId);
-      const currentRatings = prev[idStr] || [];
-      return {
-        ...prev,
-        [idStr]: [...currentRatings, Number(puntaje)],
-      };
-    });
-
-    setRatedTurnos((prev) => [...prev, turnoId]);
-
-    addNotification({
-      type: "success",
-      title: "¡Opinión Registrada!",
-      message: "Gracias por calificar la atención.",
-    });
-  };
-
-  const hasRatedTurno = (turnoId) => {
-    return ratedTurnos.includes(turnoId);
-  };
-
-  const obtenerPromedio = (profesionalId) => {
-    const idStr = String(profesionalId);
-    const notas = ratings[idStr];
-
-    if (!notas || notas.length === 0) return 0;
-
-    const sum = notas.reduce((a, b) => a + b, 0);
-    const promedio = sum / notas.length;
-
-    return parseFloat(promedio.toFixed(1));
-  };
-
-  const obtenerCantidadVotos = (profesionalId) => {
-    const idStr = String(profesionalId);
-    return ratings[idStr]?.length || 0;
-  };
-
+  // --- CARGA DE DATOS ---
   const cargarProfesionales = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/profesionales");
@@ -220,6 +161,14 @@ export const TurnosProvider = ({ children }) => {
         setTurnosReservados([]);
       }
     } catch (error) {}
+   /*   if (Array.isArray(data)) {
+        setTurnosReservados(data);
+      } else {
+        setTurnosReservados([]);
+      }
+    } catch (error) {
+      console.log("Error cargando turnos del usuario:", error);
+    }*/
   };
 
   useEffect(() => {
@@ -249,6 +198,48 @@ export const TurnosProvider = ({ children }) => {
       if (horaA !== horaB) return horaA - horaB;
       return minA - minB;
     });
+  };
+
+   const calificarProfesional = (profesionalId, puntaje, turnoId) => {
+    if (ratedTurnos.includes(turnoId)) return;
+
+    setRatings((prev) => {
+      const idStr = String(profesionalId);
+      const currentRatings = prev[idStr] || [];
+      return {
+        ...prev,
+        [idStr]: [...currentRatings, Number(puntaje)]
+      };
+    });
+
+    setRatedTurnos((prev) => [...prev, turnoId]);
+
+    addNotification({
+        type: 'success',
+        title: '¡Opinión Registrada!',
+        message: 'Gracias por calificar la atención.'
+    });
+  };
+
+const obtenerPromedio = (profesionalId) => {
+    const idStr = String(profesionalId);
+    const notas = ratings[idStr];
+
+    if (!notas || notas.length === 0) return 0;
+
+    const sum = notas.reduce((a, b) => a + b, 0);
+    const promedio = sum / notas.length;
+
+    return parseFloat(promedio.toFixed(1));
+  };
+
+  const obtenerCantidadVotos = (profesionalId) => {
+      const idStr = String(profesionalId);
+      return ratings[idStr]?.length || 0;
+  };
+
+   const hasRatedTurno = (turnoId) => {
+      return ratedTurnos.includes(turnoId);
   };
 
   const obtenerTurnosPorProfesional = (profesionalId) => {
@@ -424,3 +415,5 @@ export const TurnosProvider = ({ children }) => {
     <TurnosContext.Provider value={value}>{children}</TurnosContext.Provider>
   );
 };
+
+
