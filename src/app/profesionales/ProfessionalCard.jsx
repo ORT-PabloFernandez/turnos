@@ -1,13 +1,13 @@
 "use client";
 
 import Link from 'next/link';
-import { FaUserMd, FaCalendarAlt, FaEnvelope } from 'react-icons/fa';
+import { FaUserMd, FaCalendarAlt, FaEnvelope, FaRegStar, FaStar} from 'react-icons/fa';
 import { useTurnos } from '../context/TurnosContext';
 import './profesionales.css';
 import { useAuth } from "../context/AuthContext";
 
 export default function ProfessionalCard({ profesional }) {
-  const { obtenerHorariosDisponiblesPorProfesional, obtenerTurnosPorProfesional } = useTurnos();
+  const { obtenerHorariosDisponiblesPorProfesional, obtenerTurnosPorProfesional,obtenerPromedio } = useTurnos();
 
   const { currentUser } = useAuth();
 
