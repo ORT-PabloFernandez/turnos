@@ -6,17 +6,17 @@ import { useAuth } from '@/app/context/AuthContext';
 const UserContext = createContext();
 
 export const CatalogAvatars = [
-    { key: "1", icon: <FaSmile size={48}/> },
-    { key: "2", icon: <FaSmileBeam size={48}/> },
-    { key: "3", icon: <FaSmileWink size={48}/> },
-    { key: "default", icon: <FaUserCircle size={48}/> }
+    { key: "1", icon: <FaSmile size={48} color="#6b7280"/> },
+    { key: "2", icon: <FaSmileBeam size={48} color="#6b7280"/> },
+    { key: "3", icon: <FaSmileWink size={48} color="#6b7280"/> },
+    { key: "default", icon: <FaUserCircle size={48} color="#6b7280"/> }
 ]
 
 export const CatalogAvatars28 = [
-    { key: "1", icon: <FaSmile size={28}/> },
-    { key: "2", icon: <FaSmileBeam size={28}/> },
-    { key: "3", icon: <FaSmileWink size={28}/> },
-    { key: "default", icon: <FaUserCircle size={28}/> }
+    { key: "1", icon: <FaSmile size={28} color="#6b7280"/> },
+    { key: "2", icon: <FaSmileBeam size={28} color="#6b7280"/> },
+    { key: "3", icon: <FaSmileWink size={28} color="#6b7280"/> },
+    { key: "default", icon: <FaUserCircle size={28} color="#6b7280"/> }
 ]
 
 export const GetAvatar = (avatar, size) => {
