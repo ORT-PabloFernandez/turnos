@@ -219,11 +219,11 @@ export default function MisTurnosPage() {
                     })
                   }
                 >
-                  <FaStar /> CALIFICA ESTE TURNO
+                  <FaStar /> Califica este Turno
                 </button>
               ) : (
                 <div className="already-rated-badge">
-                  <FaCheckCircle /> Ya calificaste
+                  <FaCheckCircle /> Ya calificaste, gracias!
                 </div>
               )}
             </>
