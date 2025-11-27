@@ -16,6 +16,8 @@ export default function TurnosPage() {
     profesionales,
     reservarTurno,
     obtenerHorariosDisponiblesPorProfesional,
+    fetchSpecialties,
+    specialties
   } = useTurnos();
 
   const [selectedProfessional, setSelectedProfessional] = useState(null);
@@ -23,36 +25,13 @@ export default function TurnosPage() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [specialties, setSpecialties] = useState([]);
   const [selectedSpecialty, setSelectedSpecialty] = useState(null);
   const [filteredProfessionals, setFilteredProfessionals] = useState([]);
   const router = useRouter();
 
-  // useEffect(() => {
-  //   const profesionalId = searchParams.get("profesional");
-  //   if (profesionalId) {
-  //     const profesional = profesionales.find(
-  //       (p) => p.id === parseInt(profesionalId)
-  //     );
-  //     if (profesional) {
-  //       setSelectedProfessional(profesional);
-  //     }
-  //   }
-  // }, [searchParams, profesionales]);
-
   useEffect(() => {
-    const fetchSpecialties = async () => {
-      try {
-        const res = await fetch("http://localhost:3000/api/especialidades");
-        const data = await res.json();
-        setSpecialties(data);
-      } catch (err) {
-        console.error("Error loading specialties:", err);
-      }
-    };
-
     fetchSpecialties();
-  }, []);
+  },[])
 
   const handleSpecialtySelect = async (especialidad) => {
     setSelectedSpecialty(especialidad);

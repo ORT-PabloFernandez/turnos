@@ -24,6 +24,7 @@ export default function Navbar() {
         <div className="navbar-content">
           <div className="navbar-left">
             <Logo />
+            <Menu />
           </div>
           <div className="navbar-right">
             <AuthButtons />
