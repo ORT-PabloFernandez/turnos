@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { FaSignOutAlt, FaUserCog } from 'react-icons/fa';
+import Link from 'next/link';
+import { GetAvatar } from '@/app/context/UserContext';
 import './currentUser.css';
 
-const CurrentUser = ({ currentUser, logout }) => {
+const CurrentUser = ({ currentUser, logout, avatar }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -20,10 +22,7 @@ const CurrentUser = ({ currentUser, logout }) => {
         <span className="sr-only">Abrir menú de usuario</span>
         <div className="user-button-content">
           <div className="user-avatar">
-            <img 
-              src={currentUser.avatar} 
-              alt={`Foto de ${currentUser.name}`} 
-            />
+            {(GetAvatar(avatar, 28))}
           </div>
           <span className="user-name">{currentUser.name}</span>
         </div>
@@ -39,7 +38,7 @@ const CurrentUser = ({ currentUser, logout }) => {
         >
           <div className="dropdown-item">
             <FaUserCog className="icon" />
-            Mi perfil
+            <Link href={`/user/${currentUser.id}`} className="dropdown-item">Mi perfil</Link>
           </div>
           <div className="dropdown-item">
             {currentUser.email}

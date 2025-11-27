@@ -4,6 +4,7 @@ import Navbar from "./components/layouts/NavBar";
 import Footer from "./components/layouts/Footer";
 import { TurnosProvider } from "./context/TurnosContext";
 import { AuthProvider } from "./context/AuthContext";
+import { UserProvider } from "./context/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
       }}>
         <AuthProvider>
         <TurnosProvider>
+          <UserProvider>
           <Navbar />
           <div className="content-wrapper" style={{ 
             paddingTop: '4rem', 
@@ -39,6 +41,7 @@ export default function RootLayout({ children }) {
             {children}
           </div>
           <Footer />
+          </UserProvider>
         </TurnosProvider>
         </AuthProvider>
       </body>

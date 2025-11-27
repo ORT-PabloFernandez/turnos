@@ -10,11 +10,13 @@ import Notifications from './Notifications';
 import CurrentUser from './CurrentUser';
 import AuthButtons from './AuthButtons';
 import { useAuth } from '@/app/context/AuthContext';
+import { useUser } from '@/app/context/UserContext';
 
 export default function Navbar() {
   const { currentUser, logout, loading } = useAuth();
+  const { user } = useUser()
   const [notificationIndicator] = useState(true);
-
+  
   if (loading) return null;
   if (!currentUser) {
     return (
@@ -40,7 +42,7 @@ export default function Navbar() {
         </div>
         <div className="navbar-right">
           <Notifications notificationIndicator={notificationIndicator} />
-          <CurrentUser currentUser={currentUser} logout={logout} />
+          <CurrentUser currentUser={currentUser} avatar={user?.avatar} logout={logout} />
         </div>
       </div>
     </nav>

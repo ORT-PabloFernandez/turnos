@@ -112,22 +112,6 @@ const obtenerHorariosDisponiblesPorProfesional = (
     return turnosReservados.filter((t) => t.profesionalId === profesionalId);
   };
 
-  // TODO: Descomentar cuando tengamos el user de la sesion
-  /*const obtenerTurnosUsuario = async function fetchTurnos(){
-    try {
-      const response = await fetch('http://localhost:3000/api/turnos/usuario/1');
-      const data = await response.json();
-      console.log(data)
-      setTurnosReservados(data)
-    } catch (error){
-      console.log(error)
-    }
-  }
-
-  useEffect(() => {
-    obtenerTurnosUsuario(); 
-  }, [])*/
-
   const obtenerTurnosUsuario = () => {
     return turnosReservados;
   };
