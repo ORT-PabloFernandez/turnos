@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTurnos } from "../context/TurnosContext";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -13,6 +14,7 @@ import {
   FaStar,
   FaRegStar,
   FaCheckCircle,
+  FaEdit,
 } from "react-icons/fa";
 import "./mis-turnos.css";
 import { formatDate, parseDateTimeLocal } from "../context/Date";
@@ -24,12 +26,15 @@ export default function MisTurnosPage() {
     calificarProfesional,
     obtenerPromedio,
     hasRatedTurno,
+    comenzarModificacion, // Importamos la función
     profesionales,
     horarios,
   } = useTurnos();
   const { currentUser } = useAuth();
+  const router = useRouter();
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
+  const [showModifyConfirm, setShowModifyConfirm] = useState(null);
   const [cancelError, setCancelError] = useState("");
 
   const [rateModal, setRateModal] = useState(null);
@@ -72,6 +77,23 @@ export default function MisTurnosPage() {
       setCancelError("");
     } else {
       setCancelError("No se pudo cancelar el turno");
+    }
+  };
+
+  const handleModifyTurno = async (turno) => {
+    const turnoId = turno._id || turno.id;
+
+    // 1. Guardamos los datos del turno viejo en el contexto
+    comenzarModificacion(turno);
+
+    // 2. Cancelamos el turno actual (pasamos true para indicar que es modificación y silenciar notificación)
+    const ok = await cancelarTurno(turnoId, true);
+
+    if (ok) {
+      setShowModifyConfirm(null);
+      router.push(`/turnos?profesional=${turno.profesionalId}`);
+    } else {
+      setCancelError("Error al intentar modificar el turno");
     }
   };
 
@@ -192,18 +214,43 @@ export default function MisTurnosPage() {
 
         <div className="turno-actions">
           {statusClass === "upcoming" && (
-            <button
-              className={`btn-cancel ${
-                !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
-              }`}
-              onClick={() => {
-                if (canCancelLocal(turno.fecha, turno.hora))
-                  setShowCancelConfirm(turno._id || turno.id);
-              }}
-              disabled={!canCancelLocal(turno.fecha, turno.hora)}
-            >
-              <FaTrash /> Cancelar
-            </button>
+            <>
+              <button
+                className={`btn-modify ${
+                  !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
+                }`}
+                onClick={() => {
+                  if (canCancelLocal(turno.fecha, turno.hora))
+                    setShowModifyConfirm(turno);
+                }}
+                disabled={!canCancelLocal(turno.fecha, turno.hora)}
+                title={
+                  canCancelLocal(turno.fecha, turno.hora)
+                    ? "Modificar fecha del turno"
+                    : "Este turno no se puede modificar porque faltan menos de 24 horas"
+                }
+              >
+                <FaEdit /> Modificar
+              </button>
+
+              <button
+                className={`btn-cancel ${
+                  !canCancelLocal(turno.fecha, turno.hora) ? "disabled" : ""
+                }`}
+                onClick={() => {
+                  if (canCancelLocal(turno.fecha, turno.hora))
+                    setShowCancelConfirm(turno._id || turno.id);
+                }}
+                disabled={!canCancelLocal(turno.fecha, turno.hora)}
+                title={
+                  canCancelLocal(turno.fecha, turno.hora)
+                    ? "Cancelar turno"
+                    : "Este turno no se puede cancelar porque faltan menos de 24 horas"
+                }
+              >
+                <FaTrash /> Cancelar
+              </button>
+            </>
           )}
 
           {statusClass === "past" && !isMedico && (
@@ -219,11 +266,11 @@ export default function MisTurnosPage() {
                     })
                   }
                 >
-                  <FaStar /> Califica este Turno
+                  <FaStar /> CALIFICA ESTE TURNO
                 </button>
               ) : (
                 <div className="already-rated-badge">
-                  <FaCheckCircle /> Ya calificaste, gracias!
+                  <FaCheckCircle /> Ya calificaste
                 </div>
               )}
             </>
@@ -304,6 +351,32 @@ export default function MisTurnosPage() {
                 onClick={() => handleCancelTurno(showCancelConfirm)}
               >
                 Sí, cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModifyConfirm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>¿Modificar turno?</h3>
+            <p>
+              Para modificar el turno, el actual debe ser cancelado y serás
+              redirigido para elegir una nueva fecha.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowModifyConfirm(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => handleModifyTurno(showModifyConfirm)}
+              >
+                Sí, reprogramar
               </button>
             </div>
           </div>

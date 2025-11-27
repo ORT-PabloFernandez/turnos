@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import './navbar.css';
+import { useState } from "react";
+import "./navbar.css";
 
-// Importar los componentes modulares
+
 import Logo from './Logo';
 import Menu from './Menu';
 import Notifications from './Notifications';
@@ -16,7 +16,7 @@ export default function Navbar() {
   const { currentUser, logout, loading } = useAuth();
   const { user } = useUser()
   const [notificationIndicator] = useState(true);
-  
+
   if (loading) return null;
   if (!currentUser) {
     return (
