@@ -16,9 +16,7 @@ export const useTurnos = () => {
 const getUserIdFromCurrentUser = (user) => {
   if (!user) return null;
 
-  /*if (user.id) return user.id; // por si en algún momento tiene id
-  if (user._id?.$oid) return user._id.$oid; // formato típico de Mongo en JSON
-  if (typeof user._id === "string") return user._id; // por si ya viene como string*/
+
 
   if (user.id) return user.id;
   if (user._id) {
@@ -222,7 +220,47 @@ export const TurnosProvider = ({ children }) => {
     horarios,
   ]);
 
+  const calificarProfesional = (profesionalId, puntaje, turnoId) => {
+    if (ratedTurnos.includes(turnoId)) return;
 
+    setRatings((prev) => {
+      const idStr = String(profesionalId);
+      const currentRatings = prev[idStr] || [];
+      return {
+        ...prev,
+        [idStr]: [...currentRatings, Number(puntaje)],
+      };
+    });
+
+    setRatedTurnos((prev) => [...prev, turnoId]);
+
+    addNotification({
+      type: "success",
+      title: "¡Opinión Registrada!",
+      message: "Gracias por calificar la atención.",
+    });
+  };
+
+  const hasRatedTurno = (turnoId) => {
+    return ratedTurnos.includes(turnoId);
+  };
+
+  const obtenerPromedio = (profesionalId) => {
+    const idStr = String(profesionalId);
+    const notas = ratings[idStr];
+
+    if (!notas || notas.length === 0) return 0;
+
+    const sum = notas.reduce((a, b) => a + b, 0);
+    const promedio = sum / notas.length;
+
+    return parseFloat(promedio.toFixed(1));
+  };
+
+  const obtenerCantidadVotos = (profesionalId) => {
+    const idStr = String(profesionalId);
+    return ratings[idStr]?.length || 0;
+  };
 
   const cargarProfesionales = async () => {
     try {
@@ -270,20 +308,15 @@ export const TurnosProvider = ({ children }) => {
       }
 
       const data = await response.json();
-      if (Array.isArray(data)) {
-        setTurnosReservados(data);
-      } else {
-        setTurnosReservados([]);
-      }
-    } catch (error) {}
-    /*   if (Array.isArray(data)) {
+
+       if (Array.isArray(data)) {
         setTurnosReservados(data);
       } else {
         setTurnosReservados([]);
       }
     } catch (error) {
       console.log("Error cargando turnos del usuario:", error);
-    }*/
+    }
   };
 
   useEffect(() => {
@@ -316,47 +349,6 @@ export const TurnosProvider = ({ children }) => {
     });
   };
 
-  const calificarProfesional = (profesionalId, puntaje, turnoId) => {
-    if (ratedTurnos.includes(turnoId)) return;
-
-    setRatings((prev) => {
-      const idStr = String(profesionalId);
-      const currentRatings = prev[idStr] || [];
-      return {
-        ...prev,
-        [idStr]: [...currentRatings, Number(puntaje)],
-      };
-    });
-
-    setRatedTurnos((prev) => [...prev, turnoId]);
-
-    addNotification({
-      type: "success",
-      title: "¡Opinión Registrada!",
-      message: "Gracias por calificar la atención.",
-    });
-  };
-
-  const obtenerPromedio = (profesionalId) => {
-    const idStr = String(profesionalId);
-    const notas = ratings[idStr];
-
-    if (!notas || notas.length === 0) return 0;
-
-    const sum = notas.reduce((a, b) => a + b, 0);
-    const promedio = sum / notas.length;
-
-    return parseFloat(promedio.toFixed(1));
-  };
-
-  const obtenerCantidadVotos = (profesionalId) => {
-    const idStr = String(profesionalId);
-    return ratings[idStr]?.length || 0;
-  };
-
-  const hasRatedTurno = (turnoId) => {
-    return ratedTurnos.includes(turnoId);
-  };
 
   const obtenerTurnosPorProfesional = (profesionalId) => {
     return turnosReservados.filter((t) => t.profesionalId === profesionalId);
@@ -410,13 +402,7 @@ export const TurnosProvider = ({ children }) => {
       });
 
       if (!res.ok) {
-        /* let errorData = {};
-        try {
-          errorData = await res.json();
-        } catch (e) {}
-        console.error("Error al crear turno:", res.status, errorData);
-        return false;
-      }*/
+
         let errorMsg = "No se pudo reservar.";
         try {
           const errData = await res.json();
@@ -433,7 +419,12 @@ export const TurnosProvider = ({ children }) => {
         currentUser.rol === "profesional";
 
       if (!isDoctor) {
-        // Preparamos el detalle de fecha/hora para la notificación
+        addNotification({
+          type: "success",
+          title: "¡Turno Reservado!",
+          message: "Tu cita ha sido confirmada con éxito.",
+        });
+
         const horarioSeleccionado = horarios.find(
           (h) => h.id === horarioId || h._id === horarioId
         );
@@ -474,34 +465,8 @@ export const TurnosProvider = ({ children }) => {
     }
   };
 
-  const cancelarTurno = async (turnoId, esModificacion = false) => {
-    // Recuperamos los datos del turno ANTES de borrarlo para la notificación
-    const turnoAEliminar = turnosReservados.find(
-      (t) => t.id === turnoId || t._id === turnoId
-    );
-    let detalleTurno = "";
 
-    if (turnoAEliminar) {
-      let fecha = turnoAEliminar.fecha;
-      let hora = turnoAEliminar.hora;
-
-      // Si no tiene fecha directa, la buscamos en horarios
-      if (!fecha || !hora) {
-        const h = horarios.find(
-          (h) =>
-            h.id === turnoAEliminar.horarioId ||
-            h._id === turnoAEliminar.horarioId
-        );
-        if (h) {
-          fecha = h.fecha;
-          hora = h.hora;
-        }
-      }
-      if (fecha && hora) {
-        detalleTurno = ` del día ${fecha} a las ${hora}`;
-      }
-    }
-
+  const cancelarTurno = async (turnoId) => {
     try {
       const res = await fetch(`http://localhost:3000/api/turnos/${turnoId}`, {
         method: "DELETE",
@@ -511,23 +476,6 @@ export const TurnosProvider = ({ children }) => {
         },
       });
 
-      /*let data = {};
-      try {
-        data = await res.json();
-      } catch (e) {}
-
-      if (!res.ok) {
-        console.error("Error al cancelar el turno:", res.status, data);
-        return false;
-      }
-
-      // Actualizar frontend
-      await cargarHorarios();
-      await cargarTurnosUsuario();
-
-      return true;
-    } catch (err) {
-      console.error("Error de red al cancelar turno:", err);*/
       if (!res.ok) {
         addNotification({
           type: "error",
@@ -537,13 +485,11 @@ export const TurnosProvider = ({ children }) => {
         return false;
       }
 
-      if (!esModificacion) {
-        addNotification({
-          type: "info",
-          title: "Turno Cancelado",
-          message: `Has cancelado tu turno${detalleTurno} correctamente.`,
-        });
-      }
+      addNotification({
+        type: "info",
+        title: "Turno Cancelado",
+        message: "Has cancelado tu turno correctamente.",
+      });
 
       await cargarHorarios();
       await cargarTurnosUsuario();

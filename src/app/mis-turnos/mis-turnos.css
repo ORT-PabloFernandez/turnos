@@ -423,6 +423,38 @@
   background-color: #b91c1c;
 }
 
+.stars-display {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  color: #fbbf24;
+}
+
+.stars-display.interactive {
+  cursor: pointer;
+}
+
+.star-icon-card.empty {
+  color: #d1d5db;
+}
+
+.rating-count {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-left: 6px;
+}
+
+.already-rated-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #10b981;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
 /* Estrellas en el Modal */
 .modal-stars-container {
   display: flex;
@@ -445,7 +477,6 @@
   color: #e5e7eb;
 }
 
-
 @media (max-width: 768px) {
   .mis-turnos-container {
     padding: 1rem;
@@ -467,6 +498,7 @@
   }
 
   .turno-actions {
+    flex-wrap: wrap;
     justify-content: center;
   }
 

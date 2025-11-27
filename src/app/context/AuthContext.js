@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       const userToken = data.token || data.accessToken;
       const rawUser = data.user || data;
 
-  // Normalizar el usuario para asegurar id, nombre y email
+
   const userData = {
     id: rawUser._id,
     nombre: rawUser.username,

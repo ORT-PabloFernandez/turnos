@@ -26,7 +26,7 @@ export default function MisTurnosPage() {
     calificarProfesional,
     obtenerPromedio,
     hasRatedTurno,
-    comenzarModificacion, // Importamos la función
+    comenzarModificacion,
     profesionales,
     horarios,
   } = useTurnos();
@@ -83,10 +83,10 @@ export default function MisTurnosPage() {
   const handleModifyTurno = async (turno) => {
     const turnoId = turno._id || turno.id;
 
-    // 1. Guardamos los datos del turno viejo en el contexto
+
     comenzarModificacion(turno);
 
-    // 2. Cancelamos el turno actual (pasamos true para indicar que es modificación y silenciar notificación)
+
     const ok = await cancelarTurno(turnoId, true);
 
     if (ok) {
@@ -180,12 +180,12 @@ export default function MisTurnosPage() {
               <p className="especialidad">
                 {!isMedico ? (
                   <>
-                    {" "}
+
                     <FaUserMd /> {profesional?.especialidad || "General"}{" "}
                   </>
                 ) : (
                   <>
-                    {" "}
+
                     <FaUser /> {pacienteEmail || "Paciente"}{" "}
                   </>
                 )}
@@ -266,11 +266,11 @@ export default function MisTurnosPage() {
                     })
                   }
                 >
-                  <FaStar /> CALIFICA ESTE TURNO
+                  <FaStar /> Califica Este Turno
                 </button>
               ) : (
                 <div className="already-rated-badge">
-                  <FaCheckCircle /> Ya calificaste
+                  <FaCheckCircle /> Ya calificaste, gracias!
                 </div>
               )}
             </>
