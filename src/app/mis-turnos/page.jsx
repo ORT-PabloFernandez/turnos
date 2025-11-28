@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, loading } from "react";
 import { useRouter } from "next/navigation";
 import { useTurnos } from "../context/TurnosContext";
 import { useAuth } from "../context/AuthContext";
@@ -40,6 +40,20 @@ export default function MisTurnosPage() {
   const [rateModal, setRateModal] = useState(null);
   const [ratingScore, setRatingScore] = useState(0);
   const [hoverScore, setHoverScore] = useState(0);
+
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push("/login");
+    }
+  }, [currentUser, loading, router]);
+
+  if (loading) {
+    return <div className="loading-screen">Cargando...</div>;
+  }
+
+  if (!currentUser) {
+    return null;
+  }
 
   const isMedico =
     currentUser?.rol === "medico" || currentUser?.role === "doctor";
@@ -83,9 +97,7 @@ export default function MisTurnosPage() {
   const handleModifyTurno = async (turno) => {
     const turnoId = turno._id || turno.id;
 
-
     comenzarModificacion(turno);
-
 
     const ok = await cancelarTurno(turnoId, true);
 
@@ -180,12 +192,10 @@ export default function MisTurnosPage() {
               <p className="especialidad">
                 {!isMedico ? (
                   <>
-
                     <FaUserMd /> {profesional?.especialidad || "General"}{" "}
                   </>
                 ) : (
                   <>
-
                     <FaUser /> {pacienteEmail || "Paciente"}{" "}
                   </>
                 )}
